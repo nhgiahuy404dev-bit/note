@@ -1,20 +1,23 @@
 @echo off
 chcp 65001 >nul
 echo ========================================================
-echo   CAI DAT TU DONG TAO GHI CHU DAILY VA SUMMARY
+echo   CAI DAT TU DONG TAO GHI CHU DAILY ^& REPORT ^& SUMMARY
 echo ========================================================
 echo.
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$action = New-ScheduledTaskAction -Execute 'python.exe' -Argument '\"%~dp0create_daily_note.py\"'; $trigger = New-ScheduledTaskTrigger -Daily -At 8:00AM; Register-ScheduledTask -TaskName 'DailyNoteAutoCreate' -Action $action -Trigger $trigger -Force"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0register_tasks.ps1"
 
 if %errorlevel% equ 0 (
     echo.
-    echo [THANH CONG] Da dang ky lich tu dong chay vao luc 08:00 sang hang ngay!
-    echo - Hang ngay (T2 - T6): Tu dong tao ghi chu Daily moi.
-    echo - Cuoi tuan (T7 - CN): Tu dong tao Daily note VA tong ket Summary tuan!
+    echo ========================================================
+    echo [THANH CONG] Da dang ky 2 lich tu dong tren Windows!
+    echo ========================================================
+    echo 1. Buoi sang (08:00 AM): Tu dong tao file Ghi chu Daily moi.
+    echo 2. Cuoi gio (17:35 PM / 5:35 PM): Tu dong doc note va xuat Daily Report tieng Anh!
+    echo 3. Cuoi tuan (T7 - CN): Tu dong tong ket Summary toan bo tuan!
 ) else (
     echo.
-    echo [LUU Y] Neu gap loi, ban hay chuot phai vao file nay va chon 'Run as administrator'.
+    echo [LUU Y] Neu gap loi ve quyen, ban hay chuot phai vao file nay va chon 'Run as administrator'.
 )
 
 echo.

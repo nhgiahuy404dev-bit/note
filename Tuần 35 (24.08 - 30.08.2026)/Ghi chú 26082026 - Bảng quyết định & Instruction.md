@@ -8,3 +8,4 @@
 - [ ] **Review Instruction:**
   - Phân loại rõ ràng giữa bản Instruction chính thức và bản nháp (`instruction/draft`).
   - Kiểm tra tính đầy đủ của các bước thực thi trước khi đưa vào automation test.
+# Note 

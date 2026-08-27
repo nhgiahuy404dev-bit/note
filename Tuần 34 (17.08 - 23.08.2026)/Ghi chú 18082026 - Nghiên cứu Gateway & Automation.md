@@ -13,3 +13,5 @@
   - Sử dụng script `Helper Script/check-new-apis` để kiểm tra danh sách các API mới.
   - Cập nhật Roadmap dự án bằng lệnh `./update-roadmap.sh`.
 - [ ] **Thực thi:** Chạy thử nghiệm và kiểm tra toàn bộ các test cases trong phần Instruction.
+
+bổ sung thêm body để skip luôn approval

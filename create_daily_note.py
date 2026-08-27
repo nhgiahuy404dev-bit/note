@@ -462,6 +462,246 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
     print(f"[SUCCESS] Đã tạo/cập nhật Summary tuần thành công: {summary_file_path}")
     return summary_file_path
 
+# ==============================================================================
+# 4. TẠO DAILY REPORT CUỐI NGÀY (17:35) TỪ GHI CHÚ DAILY (ENGLISH FORMAT)
+# ==============================================================================
+
+DAY_NAME_EN = {
+    0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday",
+    4: "Friday", 5: "Saturday", 6: "Sunday"
+}
+
+EN_TRANSLATION_RULES: List[Tuple[str, str]] = [
+    (r'Nghiên cứu & thực hiện:\s*', 'Research & implement: '),
+    (r'Nghiên cứu\s*&?\s*thực hiện\s*', 'Research & implement '),
+    (r'Tìm hiểu / thực hiện:\s*', 'Research & implement: '),
+    (r'Tìm hiểu\s*/\s*chuẩn hóa:\s*', 'Study & standardize: '),
+    (r'Đồng bộ tài liệu:\s*', 'Document sync: '),
+    (r'Task thực thi:\s*', 'Task execution: '),
+    (r'Chuyển Jira sang Confluence', 'Sync Jira ticket details to Confluence'),
+    (r'Cập nhật thông tin từ\s*\*\*?Jira Ticket\*\*?\s*sang trang\s*\*\*?Confluence\*\*?\s*mà vẫn bảo toàn nguyên vẹn template của Confluence\.?', 'Update Jira ticket details to Confluence while preserving Confluence template structure.'),
+    (r'Kiểm tra bảng\s*\*\*?Test Table\*\*?\s*trong phần\s*\*\*?Test Section\*\*?\s*trên Confluence\.?', 'Verify Test Table in the Test Section on Confluence.'),
+    (r'Đối chiếu dữ liệu giữa\s*\*\*?Jira\*\*?\s*và\s*\*\*?Confluence\*\*?\s*đảm bảo khớp nội dung\.?', 'Cross-check and verify data consistency between Jira and Confluence.'),
+    (r'Lưu và xuất bản\s*\(Publish\)\s*trang tài liệu\.?', 'Save and publish Confluence documentation page.'),
+    (r'Kết nối Database:\s*', 'Database connection: '),
+    (r'Tìm hiểu cách kết nối cơ sở dữ liệu cho dự án\.?', 'Study and configure database connection for the project.'),
+    (r'Phân tích mã nguồn:\s*', 'Source code analysis: '),
+    (r'Đọc và hiểu code của\s*`?test transfer tool`?\s*và\s*`?transfer gateway`?\.?', 'Review and analyze code for test transfer tool and transfer gateway.'),
+    (r'Kiểm thử BDD / Scenario:\s*', 'BDD / Scenario Testing: '),
+    (r'Theo dõi cách viết kịch bản Smoke Test và Regression Test trong file\s*`?transfer_gateway\.feature`?\.?', 'Review Smoke Test and Regression Test scenarios in transfer_gateway.feature.'),
+    (r'Kiểm tra dữ liệu kiểm thử trong bảng\s*`?Examples`?\s*xem còn khớp với version hiện tại không để cập nhật lại\.?', 'Check and update test data in Examples table to match current version.'),
+    (r'Kỹ năng Báo cáo:\s*', 'Reporting skills: '),
+    (r'Tập viết Daily Report và Test Report theo chuẩn\.?', 'Practice writing standard Daily Report and Test Report.'),
+    (r'Công cụ hỗ trợ\s*\(Helper Scripts\):\s*', 'Helper Scripts: '),
+    (r'Sử dụng script\s*`?Helper Script/check-new-apis`?\s*để kiểm tra danh sách các API mới\.?', 'Use Helper Script/check-new-apis to check new API list.'),
+    (r'Cập nhật Roadmap dự án bằng lệnh\s*`?\./update-roadmap\.sh`?\.?', 'Update project roadmap via ./update-roadmap.sh.'),
+    (r'Thực thi:\s*', 'Execution: '),
+    (r'Chạy thử nghiệm và kiểm tra toàn bộ các test cases trong phần Instruction\.?', 'Execute and verify all test cases specified in Instruction.'),
+    (r'Bảng quyết định\s*\(Decision Table\):\s*', 'Decision Table: '),
+    (r'Học và nghiên cứu kỹ thuật thiết kế test case bằng Decision Table để bao phủ toàn bộ tổ hợp điều kiện nghiệp vụ\.?', 'Study test design techniques using Decision Table to cover business logic combinations.'),
+    (r'Review Instruction:\s*', 'Review Instruction: '),
+    (r'Phân loại rõ ràng giữa bản Instruction chính thức và bản nháp\s*\(`?instruction/draft`?\)\.?', 'Classify official Instruction vs draft versions (instruction/draft).'),
+    (r'Kiểm tra tính đầy đủ của các bước thực thi trước khi đưa vào automation test\.?', 'Verify test steps completeness before applying to automation tests.'),
+    (r'Tiếp tục hoàn thiện các nội dung liên quan đến\s*', 'Continue working on '),
+    (r'Tiếp tục các đầu việc trong kế hoạch tiếp theo', 'Continue next planned tasks'),
+    (r'Tiếp tục kế hoạch công việc ngày tiếp theo', 'Continue planned tasks for the next day'),
+    (r'Tiếp tục các đầu việc ngày mai', 'Continue planned tasks tomorrow')
+]
+
+def translate_item_to_english(text: str) -> str:
+    """Chuyển đổi các câu ghi chú tiếng Việt sang tiếng Anh chuẩn cho Daily Report"""
+    result = text.strip()
+    for pattern, repl in EN_TRANSLATION_RULES:
+        result = re.sub(pattern, repl, result, flags=re.IGNORECASE)
+    return result
+
+def generate_daily_report(base_dir: str = None, target_date: datetime = None, target_date_str: str = None, note_file_path: str = None) -> Optional[str]:
+    """
+    Tự động tạo file Daily Report cuối ngày bằng tiếng Anh (What I’ve done, In Progress, Todo, Issues)
+    từ file ghi chú daily của ngày hôm đó (chạy lúc 17:35 hoặc theo nhu cầu).
+    """
+    if base_dir is None:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    if target_date_str:
+        clean_str = target_date_str.replace("/", "").replace("-", "").replace(".", "")
+        if len(clean_str) == 8:
+            try:
+                target_date = datetime(int(clean_str[4:8]), int(clean_str[2:4]), int(clean_str[0:2]))
+            except ValueError:
+                target_date = datetime.now()
+        else:
+            target_date = datetime.now()
+    elif target_date is None:
+        target_date = datetime.now()
+
+    day_en = DAY_NAME_EN[target_date.weekday()]
+    date_formatted = target_date.strftime("%d/%m/%Y")
+    date_code = target_date.strftime("%d%m%Y")
+    
+    _, _, _, week_folder = get_week_range_info(target_date)
+    week_dir = os.path.join(base_dir, week_folder)
+
+    # Tìm file ghi chú daily của ngày hôm đó nếu chưa có đường dẫn cụ thể
+    if note_file_path is None:
+        if os.path.exists(week_dir):
+            for f in os.listdir(week_dir):
+                if f.endswith(".md") and f.startswith("Ghi chú") and date_code in f:
+                    note_file_path = os.path.join(week_dir, f)
+                    break
+
+    what_done: List[str] = []
+    in_progress: List[str] = []
+    todo: List[str] = []
+    issues: List[str] = []
+
+    if note_file_path and os.path.exists(note_file_path):
+        parsed = parse_daily_note(note_file_path)
+        main_topic = parsed.get("main_topic", "")
+        tasks_done = parsed.get("tasks_done", [])
+        tasks_pending = parsed.get("tasks_pending", [])
+        work_items = parsed.get("work_items", [])
+        learnings_sections = parsed.get("learnings_sections", {})
+        
+        # 1. Bóc tách What I've done:
+        # Ưu tiên các task [x]
+        for t in tasks_done:
+            clean_t = clean_bullet_prefix(t)
+            if clean_t:
+                en_t = translate_item_to_english(clean_t)
+                if en_t not in what_done:
+                    what_done.append(en_t)
+        
+        # Thêm các ticket/công việc đặc biệt (e.g. [TEST EXECUTION], [API-QA], [UI-QA])
+        for w in work_items:
+            clean_w = clean_bullet_prefix(w)
+            if clean_w:
+                en_w = translate_item_to_english(clean_w)
+                if en_w not in what_done:
+                    what_done.append(en_w)
+                
+        # Nếu chưa có task [x], trích xuất chủ đề chính & các mục kiến thức đã học/làm
+        if not what_done and main_topic and main_topic != "Ghi chú công việc & học tập":
+            what_done.append(translate_item_to_english(f"Nghiên cứu & thực hiện: {main_topic}"))
+
+        skip_keywords = ["ghi chú", "note", "ideas", "mẫu prompt", "chuẩn bị", "liên kết", "cảnh báo", "lưu ý", "nội dung chung"]
+        for sec_name, blocks in learnings_sections.items():
+            sec_lower = sec_name.lower()
+            if not any(k in sec_lower for k in skip_keywords) and len(what_done) < 4:
+                clean_sec = re.sub(r'^[^\w\s]+', '', sec_name).strip()
+                sec_bullet = translate_item_to_english(f"Tìm hiểu / thực hiện: {clean_sec}")
+                if sec_bullet not in what_done and clean_sec.lower() not in [x.lower() for x in what_done]:
+                    what_done.append(sec_bullet)
+
+        # 2. Bóc tách In Progress & Todo:
+        if tasks_pending:
+            for idx, p in enumerate(tasks_pending):
+                clean_p = clean_bullet_prefix(p)
+                if not clean_p:
+                    continue
+                en_p = translate_item_to_english(clean_p)
+                # Nếu có từ khóa thể hiện đang làm hoặc là task đầu tiên cần xử lý tiếp
+                if idx == 0 and len(tasks_pending) > 1 and any(k in clean_p.lower() for k in ["tiếp tục", "đang", "thực thi", "review", "kiểm thử"]):
+                    in_progress.append(en_p)
+                else:
+                    todo.append(en_p)
+
+        if not in_progress:
+            if todo and len(todo) > 1:
+                in_progress.append(todo.pop(0))
+            elif what_done:
+                in_progress.append(translate_item_to_english(f"Tiếp tục hoàn thiện các nội dung liên quan đến {main_topic}"))
+            else:
+                in_progress.append("None")
+                
+        if not what_done:
+            what_done.append(f"Research and update documentation for {date_formatted}")
+            
+        if not todo:
+            todo.append("Continue planned tasks for next day")
+
+        # 3. Issues: thường issues không ghi -> Mặc định None trừ khi có mục riêng
+        for sec_name, blocks in learnings_sections.items():
+            if any(k in sec_name.lower() for k in ["lỗi", "issue", "bug", "blocker", "vấn đề", "cảnh báo"]):
+                for b_type, b_data in blocks:
+                    if b_type == "bullet":
+                        issues.append(translate_item_to_english(b_data))
+
+    else:
+        what_done.append(f"Execute planned tasks for {date_formatted}")
+        in_progress.append("None")
+        todo.append("Continue planned tasks tomorrow")
+
+    # Xây dựng nội dung file Daily Report bằng tiếng Anh
+    report_lines = [
+        f"# 📋 DAILY REPORT - {date_formatted} ({day_en})",
+        "",
+        f"> 🕒 **Generated at:** {datetime.now().strftime('%H:%M:%S - %d/%m/%Y')}",
+        "",
+        "---",
+        "",
+        "What I’ve done:"
+    ]
+    for d in what_done:
+        report_lines.append(f"- {d}")
+        
+    report_lines.extend(["", "In Progress:"])
+    for p in in_progress:
+        if p.strip() == "None":
+            report_lines.append("None")
+        else:
+            report_lines.append(f"- {p}")
+            
+    report_lines.extend(["", "Todo:"])
+    for t in todo:
+        if t.strip() == "None":
+            report_lines.append("None")
+        else:
+            report_lines.append(f"- {t}")
+            
+    report_lines.extend(["", "Issues:"])
+    if issues:
+        for iss in issues:
+            report_lines.append(f"- {iss}")
+    else:
+        report_lines.append("None")
+        
+    report_lines.extend(["", "---", ""])
+
+    report_content = "\n".join(report_lines)
+
+    # Lưu vào file Daily Report DDMMYYYY.md trong thư mục tuần
+    os.makedirs(week_dir, exist_ok=True)
+    report_filename = f"Daily Report {date_code}.md"
+    report_file_path = os.path.join(week_dir, report_filename)
+
+    with open(report_file_path, "w", encoding="utf-8") as f:
+        f.write(report_content)
+
+    print("\n" + "="*60)
+    print(f"  📋 DAILY REPORT - {date_formatted} ({day_en})")
+    print("="*60)
+    print("\nWhat I’ve done:")
+    for d in what_done:
+        print(f"- {d}")
+    print("\nIn Progress:")
+    for p in in_progress:
+        print(f"- {p}" if p != "None" else "None")
+    print("\nTodo:")
+    for t in todo:
+        print(f"- {t}" if t != "None" else "None")
+    print("\nIssues:")
+    if issues:
+        for iss in issues:
+            print(f"- {iss}")
+    else:
+        print("None")
+    print("="*60)
+    print(f"[SUCCESS] Saved Daily Report: {report_file_path}\n")
+
+    return report_file_path
+
+
 def generate_all_summaries(base_dir: str = None):
     """Tổng kết toàn bộ các tuần trong thư mục"""
     if base_dir is None:
@@ -475,11 +715,24 @@ def generate_all_summaries(base_dir: str = None):
         generate_weekly_summary(base_dir=base_dir, week_folder_name=folder)
 
 # ==============================================================================
-# 4. ĐIỂM VÀO CHÍNH (CLI & INTERACTIVE MENU)
+# 5. ĐIỂM VÀO CHÍNH (CLI & INTERACTIVE MENU)
 # ==============================================================================
 
 if __name__ == "__main__":
-    if "--all-summaries" in sys.argv or "--all" in sys.argv:
+    if "--report" in sys.argv:
+        # Kiểm tra xem có truyền ngày cụ thể không: --report DDMMYYYY
+        idx = sys.argv.index("--report")
+        report_date_arg = None
+        if idx + 1 < len(sys.argv) and not sys.argv[idx + 1].startswith("--"):
+            report_date_arg = sys.argv[idx + 1]
+        generate_daily_report(target_date_str=report_date_arg)
+    elif "--report-date" in sys.argv:
+        idx = sys.argv.index("--report-date")
+        if idx + 1 < len(sys.argv):
+            generate_daily_report(target_date_str=sys.argv[idx + 1])
+        else:
+            generate_daily_report()
+    elif "--all-summaries" in sys.argv or "--all" in sys.argv:
         generate_all_summaries()
     elif "--summary" in sys.argv:
         generate_weekly_summary()
@@ -492,3 +745,4 @@ if __name__ == "__main__":
             print("[LỖI] Vui lòng chỉ định tên folder tuần sau cờ --week.")
     else:
         create_daily_note()
+
