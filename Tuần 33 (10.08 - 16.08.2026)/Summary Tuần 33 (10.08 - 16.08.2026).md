@@ -10,7 +10,7 @@
 | Ngày | Thứ | Chủ đề chính | File ghi chú |
 | :--- | :--- | :--- | :--- |
 | 11/08/2026 | Thứ Ba | Main Workspace | [Ghi chú 11082026 - Main Workspace.md](./Ghi%20ch%C3%BA%2011082026%20-%20Main%20Workspace.md) |
-| 15/08/2026 | Thứ Bảy | QA Fundamentals | [Ghi chú 15082026 - QA Fundamentals.md](./Ghi%20ch%C3%BA%2015082026%20-%20QA%20Fundamentals.md) |
+| 15/08/2026 | Thứ Bảy | ⭐ QA Fundamentals | [⭐Ghi chú 15082026 - QA Fundamentals.md](./%E2%AD%90Ghi%20ch%C3%BA%2015082026%20-%20QA%20Fundamentals.md) |
 
 ---
 

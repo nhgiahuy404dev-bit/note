@@ -16,6 +16,13 @@ if sys.platform.startswith("win"):
 # 1. CÁC HÀM XỬ LÝ NGÀY THÁNG & THƯ MỤC
 # ==============================================================================
 
+def get_default_base_dir() -> str:
+    """Xác định thư mục gốc chứa các tuần ghi chú (Ghi chú daily)"""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(current_dir).startswith(("_", "tool", "script")):
+        return os.path.dirname(current_dir)
+    return current_dir
+
 DAY_NAME_VI = {
     0: "Thứ Hai", 1: "Thứ Ba", 2: "Thứ Tư", 3: "Thứ Năm",
     4: "Thứ Sáu", 5: "Thứ Bảy", 6: "Chủ Nhật"
@@ -71,17 +78,46 @@ def clean_bullet_prefix(line: str) -> str:
     text = re.sub(r'^\s*\d+\.\s+', '', text)
     return text.strip()
 
+def is_empty_or_template_note(file_path: str) -> bool:
+    """Kiểm tra xem file ghi chú có phải chỉ là template trống hoặc không có nội dung thực tế không"""
+    if not os.path.exists(file_path):
+        return True
+    try:
+        size = os.path.getsize(file_path)
+        if size < 350:
+            with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+            lines = [line.strip() for line in content.splitlines() if line.strip()]
+            template_markers = ["- [ ]", "- [ ] ", "- ", "-", "---"]
+            content_lines = []
+            for line in lines:
+                if line.startswith("#") or line.startswith("*") or line in template_markers:
+                    continue
+                content_lines.append(line)
+            if not content_lines:
+                return True
+    except Exception:
+        pass
+    return False
+
 # ==============================================================================
 # 2. TẠO GHI CHÚ DAILY HÀNG NGÀY
 # ==============================================================================
 
-def create_daily_note(base_dir: str = None, auto_summary: bool = True) -> str:
-    """Tạo file ghi chú daily hôm nay và tự động tổng kết tuần nếu là Thứ 7/Chủ Nhật"""
+def create_daily_note(base_dir: str = None, auto_summary: bool = True) -> Optional[str]:
+    """Tạo file ghi chú daily hôm nay (Thứ 2 - Thứ 6) hoặc tự động tổng kết tuần nếu là Thứ 7/Chủ Nhật"""
     if base_dir is None:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_default_base_dir()
         
     now = datetime.now()
     day_name = DAY_NAME_VI[now.weekday()]
+    
+    # NẾU LÀ THỨ BẢY (5) HOẶC CHỦ NHẬT (6): KHÔNG TẠO NOTE DAILY, CHỈ TỔNG KẾT TUẦN
+    if now.weekday() >= 5:
+        print(f"[INFO] Hôm nay là {day_name}, cuối tuần không cần tạo ghi chú daily. Tiến hành tổng kết tuần...")
+        if auto_summary:
+            return generate_weekly_summary(base_dir=base_dir, target_date=now)
+        return None
     
     # Cấu trúc tên file: Ghi chú DDMMYYYY.md
     file_name = f"Ghi chú {now.strftime('%d%m%Y')}.md"
@@ -122,11 +158,6 @@ def create_daily_note(base_dir: str = None, auto_summary: bool = True) -> str:
             f.write(template)
             
         print(f"[SUCCESS] Đã tạo ghi chú daily thành công: {file_path}")
-
-    # TỰ ĐỘNG TỔNG KẾT VÀO CUỐI TUẦN (Thứ Bảy = 5, Chủ Nhật = 6)
-    if auto_summary and now.weekday() >= 5:
-        print(f"\n[AUTO-SUMMARY] Hôm nay là {day_name}, đang tự động tổng kết What I Did & What I Learned trong tuần...")
-        generate_weekly_summary(base_dir=base_dir, target_date=now)
 
     return file_path
 
@@ -181,23 +212,19 @@ def parse_daily_note(file_path: str) -> Dict[str, Any]:
             i += 1
             continue
 
-        # 1. Nhận diện khối bảng Markdown (| ... |)
+        # 1. Nhận diện khối bảng Markdown (| ... |) -> Tóm tắt súc tích, không dump nguyên bảng
         if stripped.startswith("|") and stripped.endswith("|"):
             table_lines = []
             while i < len(lines) and lines[i].strip().startswith("|") and lines[i].strip().endswith("|"):
                 table_lines.append(lines[i].strip())
                 i += 1
             
-            if len(table_lines) >= 2:
-                # Đảm bảo có separator line
-                if not any("---" in row for row in table_lines):
-                    col_count = table_lines[0].count("|") - 1
-                    sep = "| " + " | ".join([":---"] * col_count) + " |"
-                    table_lines.insert(1, sep)
-                
+            data_rows = [r for r in table_lines if not any(c in r for c in ["---", ":---"])][1:]
+            if len(data_rows) > 0:
+                summary_msg = f"Ma trận/Bảng dữ liệu: Đã xây dựng & bao phủ **{len(data_rows)} kịch bản chi tiết** (xem chi tiết trong file ghi chú ngày)."
                 if current_section not in learnings_sections:
                     learnings_sections[current_section] = []
-                learnings_sections[current_section].append(("table", table_lines))
+                learnings_sections[current_section].append(("bullet", summary_msg))
             continue
 
         # 2. Nhận diện tiêu đề mục H1, H2, H3
@@ -224,14 +251,19 @@ def parse_daily_note(file_path: str) -> Dict[str, Any]:
             i += 1
             continue
 
-        # 5. Bắt task / ticket / công việc đặc biệt
-        ticket_match = re.search(r'(\[TEST EXECUTION\]|\[API-QA\]|\[UI-QA\]|[A-Z]{2,10}-\d+)', stripped)
-        if ticket_match:
-            clean_item = clean_bullet_prefix(stripped)
-            if clean_item and clean_item not in work_items:
-                work_items.append(clean_item)
-                i += 1
-                continue
+        sec_lower = current_section.lower()
+        is_idea_sec = any(k in sec_lower for k in ["ghi nhớ", "ideas", "ý tưởng"])
+        is_issue_sec = any(k in sec_lower for k in ["lỗi", "issue", "bug", "blocker", "vấn đề", "cảnh báo"])
+
+        # 5. Bắt task / ticket / công việc đặc biệt (chỉ khi không nằm trong Ideas hoặc Issues)
+        if not is_idea_sec and not is_issue_sec:
+            ticket_match = re.search(r'(\[TEST EXECUTION\]|\[API-QA\]|\[UI-QA\]|[A-Z]{2,10}-\d+)', stripped)
+            if ticket_match:
+                clean_item = clean_bullet_prefix(stripped)
+                if clean_item and clean_item not in work_items:
+                    work_items.append(clean_item)
+                    i += 1
+                    continue
 
         # 6. Nhận diện blockquote (> ...)
         if stripped.startswith(">"):
@@ -309,7 +341,7 @@ def extract_custom_section_from_existing(existing_summary_path: str) -> Optional
 def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, week_folder_name: str = None) -> Optional[str]:
     """Tạo hoặc cập nhật file Markdown tổng kết tuần (What I Did & What I Learned)"""
     if base_dir is None:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_default_base_dir()
         
     if target_date is None:
         target_date = datetime.now()
@@ -328,16 +360,36 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
         print(f"[WARN] Thư mục tuần không tồn tại: {week_dir}")
         return None
 
-    # Quét các file ghi chú daily (bỏ qua file Summary)
+    # Quét các file ghi chú daily (chỉ lấy file ghi chú chính, bỏ qua summary, daily report và template trống)
     md_files = []
+    seen_dates = set()
     for f in os.listdir(week_dir):
-        if f.endswith(".md"):
-            lower_name = f.lower()
-            if not (lower_name.startswith("summary") or lower_name.startswith("tong_ket") or lower_name.startswith("tổng kết")):
+        if not f.endswith(".md"):
+            continue
+        lower_name = f.lower()
+        if lower_name.startswith(("summary", "tong_ket", "tổng kết", "daily report", "weekly report")):
+            continue
+        full_path = os.path.join(week_dir, f)
+        if is_empty_or_template_note(full_path):
+            continue
+        
+        file_date = parse_date_from_filename(f)
+        if file_date:
+            date_key = file_date.strftime("%d%m%Y")
+            if date_key in seen_dates:
+                continue
+            seen_dates.add(date_key)
+            
+        md_files.append(full_path)
+
+    # Nếu không có file Ghi chú nào, thử tìm Daily Report
+    if not md_files:
+        for f in os.listdir(week_dir):
+            if f.endswith(".md") and f.lower().startswith("daily report"):
                 md_files.append(os.path.join(week_dir, f))
 
     if not md_files:
-        print(f"[INFO] Không tìm thấy file ghi chú daily nào trong {week_folder_name} để tổng kết.")
+        print(f"[INFO] Không tìm thấy file ghi chú daily hợp lệ trong {week_folder_name} để tổng kết.")
         return None
 
     parsed_notes = [parse_daily_note(f) for f in md_files]
@@ -349,12 +401,12 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
 
     custom_next_week_plan = extract_custom_section_from_existing(summary_file_path)
 
-    # Dựng nội dung Markdown
+    # Dựng nội dung Markdown gọn gàng, súc tích (Executive Summary)
     md_lines = [
         f"# 📊 TỔNG KẾT TUẦN {week_num:02d} ({start_str} - {end_str})",
         "",
         f"> 📅 **Thời gian tổng kết:** {now.strftime('%d/%m/%Y %H:%M:%S')}  ",
-        f"> 📁 **Tổng số ngày ghi chú trong tuần:** {len(parsed_notes)} ngày",
+        f"> 📁 **Tổng số ngày làm việc ghi nhận:** {len(parsed_notes)} ngày",
         "",
         "---",
         "",
@@ -375,21 +427,32 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
     for note in parsed_notes:
         note_work = []
         for w in note["work_items"]:
-            note_work.append(w)
+            if w not in note_work:
+                note_work.append(w)
         for d in note["tasks_done"]:
-            note_work.append(f"**[Đã hoàn thành]** {d}")
+            formatted = f"**[Đã hoàn thành]** {d}"
+            if formatted not in note_work and d not in note_work:
+                note_work.append(formatted)
             
-        if note_work:
+        # Lọc gọn: Lấy tối đa 4-5 bullet tiêu biểu nhất mỗi ngày, bỏ các câu râu ria
+        filtered_work = []
+        for item in note_work:
+            if not any(skip in item.lower() for skip in ["*(điều kiện", "*cập nhật", "hôm qua (", "phụ thuộc cốt lõi:"]):
+                filtered_work.append(item)
+            if len(filtered_work) >= 5:
+                break
+                
+        if filtered_work:
             has_work = True
             md_lines.append(f"### 📌 {note['weekday_str']} ({note['date_str']}) - {note['main_topic']}")
-            for item in note_work:
+            for item in filtered_work:
                 md_lines.append(f"- {item}")
             md_lines.append("")
             
     if not has_work:
         md_lines.append("*(Chưa ghi nhận mục công việc cụ thể trong tuần)*\n")
         
-    md_lines.extend(["---", "", "## 📚 3. Những kiến thức & Quy trình đã học (What I Learned)", ""])
+    md_lines.extend(["---", "", "## 💡 3. Kiến thức & Điểm nổi bật (Key Learnings & Highlights)", ""])
     
     has_learnings = False
     for note in parsed_notes:
@@ -398,26 +461,29 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
         
         if learnings_sections or ideas:
             has_learnings = True
-            md_lines.append(f"### 💡 {note['weekday_str']} ({note['date_str']}) - {note['main_topic']}")
+            md_lines.append(f"### 🌟 {note['weekday_str']} ({note['date_str']}) - {note['main_topic']}")
             
             for sec_name, blocks in learnings_sections.items():
-                if sec_name != "Nội dung chung":
-                    md_lines.append(f"#### 🔹 {sec_name}")
+                if sec_name in ["Nội dung chung", "🎯 Mục tiêu trong ngày"]:
+                    continue
+                if any(k in sec_name.lower() for k in ["daily report", "công thức tạo 1 branch"]):
+                    continue
+                    
+                clean_sec_name = re.sub(r'^[^\w\s]+', '', sec_name).strip()
+                md_lines.append(f"#### 🔹 {clean_sec_name}")
                 
+                bullet_count = 0
                 for block_type, block_data in blocks:
-                    if block_type == "table":
-                        md_lines.append("")
-                        for row in block_data:
-                            md_lines.append(row)
-                        md_lines.append("")
-                    elif block_type == "quote":
+                    if block_type == "quote":
                         md_lines.append(f"> {block_data}")
                     elif block_type == "bullet":
-                        md_lines.append(f"- {block_data}")
-                        
+                        if bullet_count < 3:
+                            md_lines.append(f"- {block_data}")
+                            bullet_count += 1
+                            
             if ideas:
-                md_lines.append("#### 🧠 Ghi nhớ & Ideas")
-                for idea in ideas:
+                md_lines.append("#### 🧠 Ghi nhớ chính")
+                for idea in ideas[:2]:
                     md_lines.append(f"- {idea}")
                     
             md_lines.append("")
@@ -425,7 +491,7 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
     if not has_learnings:
         md_lines.append("*(Chưa ghi nhận mục kiến thức/quy trình cụ thể trong tuần)*\n")
         
-    md_lines.extend(["---", "", "## ⏳ 4. Các mục tiêu / Việc còn tồn đọng (Pending Tasks)", ""])
+    md_lines.extend(["---", "", "## ⏳ 4. Việc còn tồn đọng & Kế hoạch tuần tới (Pending & Next Focus)", ""])
     
     all_pending = []
     for note in parsed_notes:
@@ -436,22 +502,21 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
         for d_str, task in all_pending:
             md_lines.append(f"- [ ] `[{d_str}]` {task}")
     else:
-        md_lines.append("- [x] *Không có task tồn đọng chưa hoàn thành từ các ngày.*")
+        md_lines.append("- [x] *Không có task tồn đọng chưa hoàn thành từ các ngày làm việc.*")
         
-    md_lines.extend(["", "---", ""])
+    md_lines.append("")
 
     if custom_next_week_plan:
         md_lines.append(custom_next_week_plan)
     else:
         md_lines.extend([
-            "## 🎯 5. Định hướng & Kế hoạch tuần tiếp theo (Next Week Focus)",
-            "",
-            "- [ ] Tiếp tục thực thi và tối ưu các automation test cases.",
-            "- [ ] Rà soát các quy trình làm việc và tài liệu trên Confluence.",
-            "- [ ] ",
+            "### 🎯 Kế hoạch trọng tâm tuần tiếp theo:",
+            "- [ ] Triển khai kiểm thử End-to-End thực tế khi môi trường tích hợp hoàn tất (PR 8425 + BE Waves).",
+            "- [ ] Thực thi Regression Suite cho các luồng Crypto Fireblocks.",
+            "- [ ] Đồng bộ Test Cases lên TestRail và cập nhật trạng thái Jira.",
             "",
             "---",
-            f"*File tổng kết tuần được tự động tạo/cập nhật vào {now.strftime('%d/%m/%Y %H:%M:%S')}*"
+            f"*Tự động tổng kết lúc {now.strftime('%H:%M:%S - %d/%m/%Y')}*"
         ])
 
     summary_content = "\n".join(md_lines) + "\n"
@@ -521,7 +586,7 @@ def generate_daily_report(base_dir: str = None, target_date: datetime = None, ta
     từ file ghi chú daily của ngày hôm đó (chạy lúc 17:35 hoặc theo nhu cầu).
     """
     if base_dir is None:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_default_base_dir()
 
     if target_date_str:
         clean_str = target_date_str.replace("/", "").replace("-", "").replace(".", "")
@@ -705,7 +770,7 @@ def generate_daily_report(base_dir: str = None, target_date: datetime = None, ta
 def generate_all_summaries(base_dir: str = None):
     """Tổng kết toàn bộ các tuần trong thư mục"""
     if base_dir is None:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_default_base_dir()
         
     week_folders = [d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d)) and d.startswith("Tuần ")]
     week_folders.sort()

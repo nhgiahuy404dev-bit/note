@@ -12,7 +12,7 @@
 | 17/08/2026 | Thứ Hai | Quy trình Test Execution | [Ghi chú 17082026 - Quy trình Test Execution.md](./Ghi%20ch%C3%BA%2017082026%20-%20Quy%20tr%C3%ACnh%20Test%20Execution.md) |
 | 18/08/2026 | Thứ Ba | Nghiên cứu Gateway & Automation | [Ghi chú 18082026 - Nghiên cứu Gateway & Automation.md](./Ghi%20ch%C3%BA%2018082026%20-%20Nghi%C3%AAn%20c%E1%BB%A9u%20Gateway%20%26%20Automation.md) |
 | 19/08/2026 | Thứ Tư | Ghi chú công việc & học tập | [Ghi chú 19082026.md](./Ghi%20ch%C3%BA%2019082026.md) |
-| 21/08/2026 | Thứ Sáu | Sổ tay Quy trình QA & Automation | [Ghi chú 21082026 - Sổ tay Quy trình QA & Automation.md](./Ghi%20ch%C3%BA%2021082026%20-%20S%E1%BB%95%20tay%20Quy%20tr%C3%ACnh%20QA%20%26%20Automation.md) |
+| 21/08/2026 | Thứ Sáu | Sổ tay Quy trình QA & Automation | [⭐Ghi chú 21082026 - Sổ tay Quy trình QA & Automation.md](./%E2%AD%90Ghi%20ch%C3%BA%2021082026%20-%20S%E1%BB%95%20tay%20Quy%20tr%C3%ACnh%20QA%20%26%20Automation.md) |
 | 22/08/2026 | Thứ Bảy | Quy trình Git Branch & AI Prompt | [Ghi chú 22082026 - Quy trình Git Branch & AI Prompt.md](./Ghi%20ch%C3%BA%2022082026%20-%20Quy%20tr%C3%ACnh%20Git%20Branch%20%26%20AI%20Prompt.md) |
 
 ---
