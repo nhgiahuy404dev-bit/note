@@ -6,8 +6,8 @@ echo ========================================================
 echo.
 echo [1] Tao ghi chu Daily hom nay (Tu dong Summary neu la cuoi tuan)
 echo [2] Tao Daily Report cuoi ngay (17:35) tu ghi chu hom nay
-echo [3] Tao / Cap nhat Summary tuan nay ngay lap tuc
-echo [4] Tong ket Summary tat ca cac tuan
+echo [3] Tao / Cap nhat Weekly Summary vao folder 'Weenly Summary'
+echo [4] Tong ket Weekly Summary tat ca cac tuan vao 'Weenly Summary'
 echo.
 set /p choice="Nhap lua chon cua ban (Nhan Enter de chon 1): "
 

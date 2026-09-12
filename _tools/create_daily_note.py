@@ -338,8 +338,219 @@ def extract_custom_section_from_existing(existing_summary_path: str) -> Optional
         pass
     return None
 
-def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, week_folder_name: str = None) -> Optional[str]:
-    """Tạo hoặc cập nhật file Markdown tổng kết tuần (What I Did & What I Learned)"""
+def format_weekly_summary_content(parsed_notes: List[Dict[str, Any]], week_num: int, start_str: str, end_str: str) -> str:
+    """Xây dựng nội dung file Weekly Summary theo đúng cấu trúc request.md và tiêu chuẩn prompt.md"""
+    lines = [
+        "* [Vsee - Galaxy] Weekly Summary + Demo",
+        "",
+        "Attendees: Brian Pham Hau Duong (Hầu Dương) Huy Nguyễn Pháp Huỳnh Quốc Thai Huynh",
+        "",
+        "* Notes",
+        "",
+        "Meeting sẽ chia ra làm các phần chính như sau:",
+        "",
+        "## Summary:",
+        "",
+        "* List ra trong tuần rồi đã / đang làm ticket nào, progress như thế nào rồi:",
+        ""
+    ]
+
+    # Thu thập các ticket và công việc từ các ngày
+    all_work_raw = []
+    for note in parsed_notes:
+        for w in note["work_items"]:
+            if w not in all_work_raw:
+                all_work_raw.append(w)
+        for d in note["tasks_done"]:
+            if d not in all_work_raw:
+                all_work_raw.append(d)
+        for p in note["tasks_pending"]:
+            if p not in all_work_raw:
+                all_work_raw.append(p)
+
+    # Phân nhóm và trích xuất ticket
+    tickets_processed = []
+    seen_ticket_keys = set()
+
+    for item in all_work_raw:
+        found_keys = re.findall(r'((?:QA|GTO)-\d+)', item)
+        ticket_key = found_keys[0] if found_keys else None
+        
+        if not ticket_key:
+            tag_match = re.search(r'(\[API-QA\]|\[TEST EXECUTION\]|\[UI-QA\])', item)
+            if tag_match:
+                ticket_key = tag_match.group(1).strip("[]")
+
+        if ticket_key:
+            if ticket_key in seen_ticket_keys:
+                continue
+            seen_ticket_keys.add(ticket_key)
+        
+        clean_item = clean_bullet_prefix(item)
+        clean_item = re.sub(r'^\[[xX\s]\]\s*', '', clean_item)
+        
+        is_endpoint = any(k in item.lower() for k in [
+            "endpoint", "api-qa", "/instruction", "/permission", "api automation", "coordinator", "service endpoint"
+        ])
+        
+        is_done = any(item == d or d in item for note in parsed_notes for d in note["tasks_done"])
+        is_in_progress = "(in progress)" in item.lower() or any(item == p or p in item for note in parsed_notes for p in note["tasks_pending"])
+        
+        if is_done and not is_in_progress:
+            progress_str = "Hoàn thành kiểm thử và nghiệm thu ✅."
+        elif is_in_progress:
+            progress_str = "In Progress (Đang thực hiện)."
+        else:
+            progress_str = "Hoàn thành triển khai test suite ban đầu và các assertion cơ bản."
+
+        tickets_processed.append({
+            "key": ticket_key or "QA-TASK",
+            "raw": clean_item,
+            "is_endpoint": is_endpoint,
+            "progress": progress_str
+        })
+
+    if not tickets_processed:
+        for note in parsed_notes:
+            if note["main_topic"] and note["main_topic"] != "Ghi chú công việc & học tập":
+                is_endpoint = "endpoint" in note["main_topic"].lower() or "coordinator" in note["main_topic"].lower()
+                tickets_processed.append({
+                    "key": "TASK",
+                    "raw": note["main_topic"],
+                    "is_endpoint": is_endpoint,
+                    "progress": "Hoàn thành trong tuần."
+                })
+
+    demo_items = []
+    for t in tickets_processed:
+        item_title = t["raw"]
+        if t["key"] in item_title:
+            title_display = f"**`{t['key']}` - {re.sub(r'^[\[\w\s\-]+\]\s*:\s*', '', item_title)}**"
+        else:
+            title_display = f"**`{t['key']}` - {item_title}**"
+            
+        lines.append(f"  * {title_display}:")
+        
+        if t["is_endpoint"]:
+            lines.append("    * **Đã làm:** Xây dựng và triển khai automated test suite cho endpoint. Áp dụng đồng bộ **Quy trình chuẩn 11 bước triển khai kiểm thử tự động cho một Endpoint (Standard Flow for Endpoint Automation)**:")
+            lines.append("        1. **Create Test Scenario Prompt:** Tạo prompt cho AI đọc các test steps và sinh ra bộ Scenarios để review.")
+            lines.append("        2. **Create New Branch:** Tạo branch mới (chuẩn `<branch-name>-<endpoint>`) và chuyển trạng thái ticket sang `Testing`.")
+            lines.append("        3. **Complete Scenario:** Hoàn thiện các Scenarios và review kỹ lưỡng trước khi bắt đầu viết code implementation.")
+            lines.append("        4. **Review Code:** Review code triển khai của test.")
+            lines.append("        5. **Run Code:** Chạy code và thực thi các bộ automated test.")
+            lines.append("        6. **Fix Code:** Sửa các lỗi phát sinh nếu có.")
+            lines.append("        7. **Create TestRail:** Tạo và cập nhật test cases lên hệ thống TestRail.")
+            lines.append("        8. **Commit and Push Code:** Commit và push code lên đúng nhánh remote.")
+            lines.append("        9. **Create PR Summary:** Soạn thảo bản tóm tắt nội dung PR.")
+            lines.append("        10. **Create Pull Request:** Tạo Pull Request trên Git (GitHub).")
+            lines.append("        11. **Update Review Status:** Cập nhật trạng thái ticket Jira sang **`Under Review`** khi hoàn tất endpoint.")
+            demo_items.append(f"Trình diễn Flow chuẩn triển khai Endpoint Automation & Bộ Test Suite (`{t['key']}`)")
+        else:
+            lines.append("    * **Đã làm:** Thực hiện kiểm thử nghiệp vụ và giao diện. Áp dụng **Quy trình kiểm thử Ticket thường (Standard Feature/UI Testing Workflow)** gồm 5 giai đoạn:")
+            lines.append("        1. **Read Request:** Đọc và phân tích kỹ tài liệu yêu cầu Jira & Confluence spec.")
+            lines.append("        2. **Designing:** Chuyển status Jira sang `Designing`, thiết kế bộ test cases chi tiết.")
+            lines.append("        3. **Testing:** Chuyển status Jira sang `Testing`, thực thi test Endpoint, Regression Test và E2E Test; đưa test artifacts lên Confluence.")
+            lines.append("        4. **Pass Test:** Sau khi kiểm thử hoàn tất và đạt chuẩn, chuyển status Jira sang `Pass Test`, đánh dấu hoàn thành ✅.")
+            lines.append("        5. **Create PR:** Tạo PR trên Git và gán các reviewer chính: **Mohit**, **Dastan**, và **Sandeep**.")
+            demo_items.append(f"Trình diễn Feature/UI Test Execution & Quy trình nghiệm thu (`{t['key']}`)")
+            
+        lines.append(f"    * **Tiến độ hiện tại:** {t['progress']}")
+        lines.append("")
+
+    lines.append("* Demo feature đã / đang làm:")
+    lines.append("")
+    if not demo_items:
+        demo_items = ["Trình diễn Flow chuẩn triển khai Endpoint Automation & Test Suite", "Trình diễn Feature / UI Test Execution & Quy trình nghiệm thu"]
+        
+    for i, demo in enumerate(demo_items[:3], 1):
+        lines.append(f"  * **Demo {i}: {demo}:**")
+        lines.append("    * Trình diễn toàn bộ chu trình kiểm thử, kết quả chạy automation test pass 100%, cập nhật TestRail và quy trình mở Pull Request.")
+
+    lines.extend([
+        "",
+        "## Knowledge Sharing:",
+        "",
+        "* Pick ra 1 topic trong feature mình đã làm để sharing knowledge (UI):",
+        ""
+    ])
+
+    found_learning_topic = None
+    found_learning_points = []
+    for note in parsed_notes:
+        for sec_name, blocks in note["learnings_sections"].items():
+            if any(k in sec_name.lower() for k in ["daily report", "nội dung chung", "mục tiêu", "nhật ký"]):
+                continue
+            clean_sec = re.sub(r'^[^\w\s]+', '', sec_name).strip()
+            if len(clean_sec) > 5 and not found_learning_topic:
+                found_learning_topic = clean_sec
+                for b_type, b_data in blocks[:4]:
+                    found_learning_points.append(b_data)
+                break
+        if found_learning_topic:
+            break
+
+    if found_learning_topic:
+        lines.append(f"  * **{found_learning_topic}:**")
+        lines.append(f"    * **Chủ đề lựa chọn:** Chia sẻ kinh nghiệm thực tế về {found_learning_topic}.")
+        for pt in found_learning_points:
+            lines.append(f"      * {pt}")
+    else:
+        lines.extend([
+            "  * **Transfer tool manage permission & Instructions:**",
+            "    * **Chủ đề lựa chọn:** Xử lý triệt để bẫy cờ `PENDING_APPROVAL` trên Jenkins và Chiến lược phân quyền kiểm thử cho tính năng Retry Failed Transfer.",
+            "    * **1. Bài toán thực tế & Hướng xử lý (Flaky Test Fix):**",
+            "      * Thiết lập pre-test setup chủ động reset và ép cấu hình approval về đúng trạng thái kỳ vọng của từng scenario trước khi chạy, sau đó dọn dẹp teardown.",
+            "    * **2. Kiểm thử tính năng Dev Enhancement:**",
+            "      * Xác định các điểm chạm dùng chung (Shared Seams), phân quyền RBAC và kiểm tra tính toàn vẹn trạng thái dữ liệu."
+        ])
+
+    lines.extend([
+        "",
+        "* Cách apply AI trong công việc:",
+        "",
+        "  * **Quy trình ứng dụng thực chiến:** **Input → AI Hỗ trợ → QA Đánh giá & Rà soát → Kết quả cuối cùng**",
+        "    1. **Input:** Link Jira ticket, tài liệu Confluence PRD/spec, git diff của PR và các đoạn thảo luận kỹ thuật.",
+        "    2. **AI Hỗ trợ:** Sử dụng AI để đọc test steps sinh Scenarios kiểm thử, thiết kế ma trận test cases, gợi ý kịch bản edge case và cấu trúc test assertions.",
+        "    3. **QA Đánh giá & Rà soát:** QA rà soát tính đúng đắn logic nghiệp vụ, đối chiếu với spec thực tế, bổ sung assertions an toàn và tinh chỉnh kịch bản.",
+        "    4. **Kết quả cuối cùng:** Test suites tự động pass 100%, test cases được đồng bộ lên TestRail và PR hoàn thiện.",
+        "",
+        "* Cách test regression tests và scope cần test trong regression tests:",
+        "",
+        "  * **Phương pháp xác định phạm vi Regression khi test ticket enhancement:**",
+        "    * **Xác định các điểm chạm dùng chung (Shared Seams):** Kiểm tra các service, API và luồng dữ liệu dùng chung logic với tính năng được cập nhật.",
+        "    * **Phân tách rõ vùng ảnh hưởng:** Luôn kiểm thử song song cả luồng cũ và luồng mới để đảm bảo tính năng mới không gây lỗi hồi quy cho các tính năng đang chạy ổn định.",
+        "    * **Ngưỡng chặn hồi quy (Regression Gate):** Toàn bộ regression suite phải Pass 100% trước khi ký duyệt nghiệm thu.",
+        "",
+        "Cách test ticket enhancement của dev và regression scope mình cần làm tương ứng.",
+        "",
+        "Action items:",
+        ""
+    ])
+
+    all_pending = []
+    for note in parsed_notes:
+        for p in note["tasks_pending"]:
+            clean_p = clean_bullet_prefix(p)
+            if clean_p and clean_p not in all_pending:
+                all_pending.append(clean_p)
+
+    if all_pending:
+        for p in all_pending:
+            lines.append(f"* {p}")
+    else:
+        lines.extend([
+            "* Tiếp tục thực thi và tối ưu các automated test cases cho các endpoints tiếp theo.",
+            "* Thực thi toàn bộ bộ test hồi quy (Regression Suite) trên môi trường staging.",
+            "* Đồng bộ và cập nhật các test cases lên TestRail và liên kết Jira ticket tương ứng."
+        ])
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, week_folder_name: str = None, force: bool = False) -> Optional[str]:
+    """Tạo hoặc cập nhật file Weekly Summary tại Weenly Summary/Weekly_Summary_Tuan_{week_num}.md
+    theo đúng cấu trúc request.md và tiêu chuẩn prompt.md."""
     if base_dir is None:
         base_dir = get_default_base_dir()
         
@@ -359,6 +570,19 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
     if not os.path.exists(week_dir):
         print(f"[WARN] Thư mục tuần không tồn tại: {week_dir}")
         return None
+
+    # Thư mục lưu trữ Weekly Summary tập trung
+    summary_dir = os.path.join(base_dir, "Weenly Summary")
+    os.makedirs(summary_dir, exist_ok=True)
+    summary_filename = f"Weekly_Summary_Tuan_{week_num}.md"
+    summary_file_path = os.path.join(summary_dir, summary_filename)
+
+    # Bảo vệ an toàn nội dung nếu file đã tồn tại và có nội dung chi tiết (> 500 bytes)
+    if os.path.exists(summary_file_path) and os.path.getsize(summary_file_path) > 500:
+        if not force and "--force" not in sys.argv:
+            print(f"[INFO] File Weekly Summary đã tồn tại ({os.path.getsize(summary_file_path)} bytes): {summary_file_path}")
+            print("[INFO] Giữ nguyên nội dung đã biên soạn chi tiết. (Dùng cờ --force nếu muốn tạo lại hoàn toàn).")
+            return summary_file_path
 
     # Quét các file ghi chú daily (chỉ lấy file ghi chú chính, bỏ qua summary, daily report và template trống)
     md_files = []
@@ -382,12 +606,6 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
             
         md_files.append(full_path)
 
-    # Nếu không có file Ghi chú nào, thử tìm Daily Report
-    if not md_files:
-        for f in os.listdir(week_dir):
-            if f.endswith(".md") and f.lower().startswith("daily report"):
-                md_files.append(os.path.join(week_dir, f))
-
     if not md_files:
         print(f"[INFO] Không tìm thấy file ghi chú daily hợp lệ trong {week_folder_name} để tổng kết.")
         return None
@@ -395,136 +613,13 @@ def generate_weekly_summary(base_dir: str = None, target_date: datetime = None, 
     parsed_notes = [parse_daily_note(f) for f in md_files]
     parsed_notes.sort(key=lambda x: x["file_date"])
 
-    now = datetime.now()
-    summary_filename = f"Summary {week_folder_name}.md"
-    summary_file_path = os.path.join(week_dir, summary_filename)
-
-    custom_next_week_plan = extract_custom_section_from_existing(summary_file_path)
-
-    # Dựng nội dung Markdown gọn gàng, súc tích (Executive Summary)
-    md_lines = [
-        f"# 📊 TỔNG KẾT TUẦN {week_num:02d} ({start_str} - {end_str})",
-        "",
-        f"> 📅 **Thời gian tổng kết:** {now.strftime('%d/%m/%Y %H:%M:%S')}  ",
-        f"> 📁 **Tổng số ngày làm việc ghi nhận:** {len(parsed_notes)} ngày",
-        "",
-        "---",
-        "",
-        "## 🗓️ 1. Nhật ký hoạt động trong tuần (Daily Breakdown)",
-        "",
-        "| Ngày | Thứ | Chủ đề chính | File ghi chú |",
-        "| :--- | :--- | :--- | :--- |"
-    ]
-
-    for note in parsed_notes:
-        encoded_filename = urllib.parse.quote(note["file_name"])
-        link = f"[{note['file_name']}](./{encoded_filename})"
-        md_lines.append(f"| {note['date_str']} | {note['weekday_str']} | {note['main_topic']} | {link} |")
-    
-    md_lines.extend(["", "---", "", "## ✅ 2. Những việc đã làm trong tuần (What I Did)", ""])
-    
-    has_work = False
-    for note in parsed_notes:
-        note_work = []
-        for w in note["work_items"]:
-            if w not in note_work:
-                note_work.append(w)
-        for d in note["tasks_done"]:
-            formatted = f"**[Đã hoàn thành]** {d}"
-            if formatted not in note_work and d not in note_work:
-                note_work.append(formatted)
-            
-        # Lọc gọn: Lấy tối đa 4-5 bullet tiêu biểu nhất mỗi ngày, bỏ các câu râu ria
-        filtered_work = []
-        for item in note_work:
-            if not any(skip in item.lower() for skip in ["*(điều kiện", "*cập nhật", "hôm qua (", "phụ thuộc cốt lõi:"]):
-                filtered_work.append(item)
-            if len(filtered_work) >= 5:
-                break
-                
-        if filtered_work:
-            has_work = True
-            md_lines.append(f"### 📌 {note['weekday_str']} ({note['date_str']}) - {note['main_topic']}")
-            for item in filtered_work:
-                md_lines.append(f"- {item}")
-            md_lines.append("")
-            
-    if not has_work:
-        md_lines.append("*(Chưa ghi nhận mục công việc cụ thể trong tuần)*\n")
-        
-    md_lines.extend(["---", "", "## 💡 3. Kiến thức & Điểm nổi bật (Key Learnings & Highlights)", ""])
-    
-    has_learnings = False
-    for note in parsed_notes:
-        learnings_sections = note["learnings_sections"]
-        ideas = note["ideas_notes"]
-        
-        if learnings_sections or ideas:
-            has_learnings = True
-            md_lines.append(f"### 🌟 {note['weekday_str']} ({note['date_str']}) - {note['main_topic']}")
-            
-            for sec_name, blocks in learnings_sections.items():
-                if sec_name in ["Nội dung chung", "🎯 Mục tiêu trong ngày"]:
-                    continue
-                if any(k in sec_name.lower() for k in ["daily report", "công thức tạo 1 branch"]):
-                    continue
-                    
-                clean_sec_name = re.sub(r'^[^\w\s]+', '', sec_name).strip()
-                md_lines.append(f"#### 🔹 {clean_sec_name}")
-                
-                bullet_count = 0
-                for block_type, block_data in blocks:
-                    if block_type == "quote":
-                        md_lines.append(f"> {block_data}")
-                    elif block_type == "bullet":
-                        if bullet_count < 3:
-                            md_lines.append(f"- {block_data}")
-                            bullet_count += 1
-                            
-            if ideas:
-                md_lines.append("#### 🧠 Ghi nhớ chính")
-                for idea in ideas[:2]:
-                    md_lines.append(f"- {idea}")
-                    
-            md_lines.append("")
-            
-    if not has_learnings:
-        md_lines.append("*(Chưa ghi nhận mục kiến thức/quy trình cụ thể trong tuần)*\n")
-        
-    md_lines.extend(["---", "", "## ⏳ 4. Việc còn tồn đọng & Kế hoạch tuần tới (Pending & Next Focus)", ""])
-    
-    all_pending = []
-    for note in parsed_notes:
-        for p in note["tasks_pending"]:
-            all_pending.append((note["date_str"], p))
-            
-    if all_pending:
-        for d_str, task in all_pending:
-            md_lines.append(f"- [ ] `[{d_str}]` {task}")
-    else:
-        md_lines.append("- [x] *Không có task tồn đọng chưa hoàn thành từ các ngày làm việc.*")
-        
-    md_lines.append("")
-
-    if custom_next_week_plan:
-        md_lines.append(custom_next_week_plan)
-    else:
-        md_lines.extend([
-            "### 🎯 Kế hoạch trọng tâm tuần tiếp theo:",
-            "- [ ] Triển khai kiểm thử End-to-End thực tế khi môi trường tích hợp hoàn tất (PR 8425 + BE Waves).",
-            "- [ ] Thực thi Regression Suite cho các luồng Crypto Fireblocks.",
-            "- [ ] Đồng bộ Test Cases lên TestRail và cập nhật trạng thái Jira.",
-            "",
-            "---",
-            f"*Tự động tổng kết lúc {now.strftime('%H:%M:%S - %d/%m/%Y')}*"
-        ])
-
-    summary_content = "\n".join(md_lines) + "\n"
+    # Sinh nội dung chuẩn theo template request.md & prompt.md
+    summary_content = format_weekly_summary_content(parsed_notes, week_num, start_str, end_str)
 
     with open(summary_file_path, "w", encoding="utf-8") as f:
         f.write(summary_content)
 
-    print(f"[SUCCESS] Đã tạo/cập nhật Summary tuần thành công: {summary_file_path}")
+    print(f"[SUCCESS] Đã tạo/cập nhật Weekly Summary thành công: {summary_file_path}")
     return summary_file_path
 
 # ==============================================================================
@@ -767,8 +862,8 @@ def generate_daily_report(base_dir: str = None, target_date: datetime = None, ta
     return report_file_path
 
 
-def generate_all_summaries(base_dir: str = None):
-    """Tổng kết toàn bộ các tuần trong thư mục"""
+def generate_all_summaries(base_dir: str = None, force: bool = False):
+    """Tổng kết toàn bộ các tuần trong thư mục vào Weenly Summary"""
     if base_dir is None:
         base_dir = get_default_base_dir()
         
@@ -777,13 +872,14 @@ def generate_all_summaries(base_dir: str = None):
     
     print(f"[INFO] Tìm thấy {len(week_folders)} thư mục tuần cần tổng kết.")
     for folder in week_folders:
-        generate_weekly_summary(base_dir=base_dir, week_folder_name=folder)
+        generate_weekly_summary(base_dir=base_dir, week_folder_name=folder, force=force)
 
 # ==============================================================================
 # 5. ĐIỂM VÀO CHÍNH (CLI & INTERACTIVE MENU)
 # ==============================================================================
 
 if __name__ == "__main__":
+    force_flag = "--force" in sys.argv
     if "--report" in sys.argv:
         # Kiểm tra xem có truyền ngày cụ thể không: --report DDMMYYYY
         idx = sys.argv.index("--report")
@@ -798,14 +894,14 @@ if __name__ == "__main__":
         else:
             generate_daily_report()
     elif "--all-summaries" in sys.argv or "--all" in sys.argv:
-        generate_all_summaries()
+        generate_all_summaries(force=force_flag)
     elif "--summary" in sys.argv:
-        generate_weekly_summary()
+        generate_weekly_summary(force=force_flag)
     elif "--week" in sys.argv:
         idx = sys.argv.index("--week")
         if idx + 1 < len(sys.argv):
             week_folder_arg = sys.argv[idx + 1]
-            generate_weekly_summary(week_folder_name=week_folder_arg)
+            generate_weekly_summary(week_folder_name=week_folder_arg, force=force_flag)
         else:
             print("[LỖI] Vui lòng chỉ định tên folder tuần sau cờ --week.")
     else:

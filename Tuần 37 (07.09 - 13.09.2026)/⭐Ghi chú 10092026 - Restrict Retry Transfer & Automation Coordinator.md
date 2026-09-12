@@ -3,8 +3,8 @@
 ---
 
 ## 🎯 Mục tiêu trong ngày
-- [ ] **[TEST EXECUTION] - [QA-6880]:** `[GTO-16245]`, `[GTO-16246]` Restrict retry of a failed transfer to ops users only, and drop the retry time window *(In Progress)*
-- [ ] **[API-QA] - [QA-6700]:** Implement automated tests for the missing Coordinator service endpoints `/instruction/by-step-ref/{uniqueRef}`
+- [x] **[TEST EXECUTION] - [QA-6880]:** `[GTO-16245]`, `[GTO-16246]` Restrict retry of a failed transfer to ops users only, and drop the retry time window *(In Progress)*
+- [x] **[API-QA] - [QA-6700]:** Implement automated tests for the missing Coordinator service endpoints `/instruction/by-step-ref/{uniqueRef}`
 
 ---
 
@@ -39,8 +39,59 @@ git checkout -b <branch-name>-<endpoint>
 
 ---
 
+## 🏗️ Tổng quan về Jenkins (CI/CD System)
+
+> [!NOTE]
+> **Bản chất:** Jenkins là một **Hệ thống CI/CD (Continuous Integration / Continuous Delivery)** hoàn chỉnh, **không chỉ dùng riêng cho việc chạy test (Run tests)** mà còn quản lý và tự động hóa toàn diện quy trình phát triển, tích hợp và triển khai phần mềm.
+
+### 📋 Các ứng dụng phổ biến (Common Uses)
+
+| STT | Trường hợp sử dụng | Mục đích & Chi tiết |
+| :---: | :--- | :--- |
+| 1 | **Run automated tests** | Tự động kích hoạt và thực thi các bộ kiểm thử (API, UI, Regression, Unit tests) |
+| 2 | **Build applications** | Biên dịch mã nguồn, đóng gói ứng dụng và tạo build artifacts |
+| 3 | **Deploy to servers** | Tự động triển khai phiên bản mới lên các máy chủ / môi trường (Dev, Staging, Production) |
+| 4 | **Run scheduled jobs** | Thiết lập lịch trình tự động (cron jobs) chạy các tác vụ nền, batch jobs, báo cáo |
+| 5 | **DevOps Integrations** | Tích hợp liền mạch với hệ sinh thái Git (**GitHub**, **GitLab**), **Docker**, **Kubernetes**, v.v. |
+
+---
+
+## 🔐 Quy trình thêm Secret mới cho Jenkins (Add New Secret to Jenkins)
+
+### 📋 1. Ma trận triển khai & Phân quyền duyệt (Execution & Approval Matrix)
+
+| Repository | Thứ tự thực hiện | Nhóm xét duyệt (Approval) | Kênh phối hợp / Ghi chú |
+| :--- | :---: | :--- | :--- |
+| **`terraform`** | **1 (Làm trước)** | **SRE-ONCALL** (Infra Team) | Kênh Slack `#production_assistance` |
+| **`jenkins`** | **2 (Làm sau)** | **Team QA** | Phê duyệt nội bộ team QA |
+
+---
+
+### 🚀 2. Quy trình Apply & Merge trên Repo `terraform`
+
+1. **Tạo Pull Request:** Khai báo secret mới trên repository `terraform`.
+2. **Xin Approval:** Liên hệ **SRE-ONCALL** trên kênh Slack `#production_assistance` để được review và approve PR.
+3. **Thực thi lệnh Atlantis:** Sau khi nhận được Approval, tại ô bình luận (Comment) của PR trên GitHub, gõ lệnh:
+   ```bash
+   atlantis apply
+   ```
+4. **Kiểm tra kết quả:** Chờ hệ thống Atlantis chạy và báo trạng thái apply thành công hoàn tất.
+5. **Tiến hành Merge:** Chỉ nhấn **Merge PR** sau khi `atlantis apply` đã chạy thành công 100%.
+
+> [!IMPORTANT]
+> **Nguyên tắc Merge:** Tuyệt đối không merge PR khi `atlantis apply` chưa chạy xong hoặc bị lỗi.
+
+---
+
+### 📌 3. Lưu ý định dạng Key khi add vào `terraform` (Key Naming Rule)
+
+> [!WARNING]
+> **Quy tắc đặt Key:** Khi khai báo key secret trên **`terraform`**, bắt buộc phải **thêm dấu sao (`*`) vào sau cùng của key** (suffix `*`, ví dụ: `<secret_key_name>*`) để đảm bảo hệ thống match và phân quyền đúng phạm vi.
+
+---
+
 ## 💡 Kế hoạch tiếp theo & Ghi nhớ
 - **Kế hoạch tiếp theo:** `[API-QA]` - `[QA-6700]` Triển khai automated tests cho Coordinator service endpoints `/instruction/request/status` (dự kiến ngày mai).
 
 ---
-*Tạo tự động vào lúc 08:00:02 - Cập nhật format vào lúc 08:16:30*
+*Tạo tự động vào lúc 08:00:02 - Cập nhật format vào lúc 17:18:00*

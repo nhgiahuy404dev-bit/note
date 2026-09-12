@@ -73,6 +73,12 @@ Biến mọi tài liệu nháp thô sơ, ghi chú lộn xộn hoặc tài liệu
 - **100% Bảo toàn thông tin**: Giữ nguyên tất cả các link, ID, code snippet, ý đồ kỹ thuật của tác giả.
 - **Sửa lỗi diễn đạt**: Chỉnh sửa lỗi chính tả tiếng Việt, câu cú lủng củng, thống nhất đại từ và thuật ngữ chuyên ngành (QA, Automation, BDD, API).
 
+### 7. Tự Động Nhận Diện Quy Trình Theo Loại Ticket (Auto-Detect Workflow)
+- **Khi dòng task có từ khóa `endpoint`, tag `[API-QA]`, hoặc có URL path API (`/.../...`)**:
+  ➔ Tự động format theo **Flow 11 bước Endpoint Automation**: `Create Test Scenario Prompt` ➔ `Create New Branch` ➔ `Complete Scenario` ➔ `Review Code` ➔ `Run Code` ➔ `Fix Code` ➔ `Create TestRail` ➔ `Commit and Push Code` ➔ `Create PR Summary` ➔ `Create Pull Request` ➔ `Update Review Status` (`Under Review`).
+- **Khi dòng task có tag `[TEST EXECUTION]`, `[UI-QA]`, hoặc ticket chức năng/giao diện chung (`GTO-xxxx`)**:
+  ➔ Tự động format theo **Flow 5 bước Ticket Thường**: `Read Request` ➔ `Designing` ➔ `Testing` ➔ `Pass Test` (đánh dấu ✅) ➔ `Create PR` (gán reviewers: **Mohit**, **Dastan**, và **Sandeep**).
+
 ---
 
 ## 🛠️ Quy Trình Thực Hiện Khi Nhận Lệnh `/formatting` hoặc `/formating`
