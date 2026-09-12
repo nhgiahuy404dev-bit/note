@@ -103,17 +103,19 @@ def is_empty_or_template_note(file_path: str) -> bool:
 # ==============================================================================
 # 2. TẠO GHI CHÚ DAILY HÀNG NGÀY
 # ==============================================================================
+# 2. TẠO GHI CHÚ DAILY HÀNG NGÀY & TẠO BÙ CÁC NGÀY THIẾU
+# ==============================================================================
 
-def create_daily_note(base_dir: str = None, auto_summary: bool = True) -> Optional[str]:
-    """Tạo file ghi chú daily hôm nay (Thứ 2 - Thứ 6) hoặc tự động tổng kết tuần nếu là Thứ 7/Chủ Nhật"""
+def create_daily_note(base_dir: str = None, auto_summary: bool = True, force_today: bool = False) -> Optional[str]:
+    """Tạo file ghi chú daily hôm nay (Thứ 2 - Thứ 6 hoặc Thứ 7 nếu cần)"""
     if base_dir is None:
         base_dir = get_default_base_dir()
         
     now = datetime.now()
     day_name = DAY_NAME_VI[now.weekday()]
     
-    # NẾU LÀ THỨ BẢY (5) HOẶC CHỦ NHẬT (6): KHÔNG TẠO NOTE DAILY, CHỈ TỔNG KẾT TUẦN
-    if now.weekday() >= 5:
+    # NẾU LÀ CHỦ NHẬT (6): KHÔNG TẠO NOTE DAILY, TIẾN HÀNH TỔNG KẾT TUẦN
+    if now.weekday() == 6 and not force_today:
         print(f"[INFO] Hôm nay là {day_name}, cuối tuần không cần tạo ghi chú daily. Tiến hành tổng kết tuần...")
         if auto_summary:
             return generate_weekly_summary(base_dir=base_dir, target_date=now)
@@ -131,7 +133,7 @@ def create_daily_note(base_dir: str = None, auto_summary: bool = True) -> Option
     existing_file = None
     if os.path.exists(target_dir):
         for f in os.listdir(target_dir):
-            if f.endswith(".md") and f.startswith("Ghi chú") and date_pattern in f:
+            if f.endswith(".md") and "Ghi chú" in f and date_pattern in f:
                 existing_file = os.path.join(target_dir, f)
                 break
 
@@ -160,6 +162,84 @@ def create_daily_note(base_dir: str = None, auto_summary: bool = True) -> Option
         print(f"[SUCCESS] Đã tạo ghi chú daily thành công: {file_path}")
 
     return file_path
+
+
+def fill_missing_daily_notes(base_dir: str = None, target_date: datetime = None, include_saturday: bool = True) -> List[str]:
+    """Kiểm tra và tạo bù file ghi chú cho các ngày còn thiếu trong tuần (Thứ 2 đến Thứ 6 hoặc Thứ 7)"""
+    if base_dir is None:
+        base_dir = get_default_base_dir()
+    if target_date is None:
+        target_date = datetime.now()
+
+    week_num, start_of_week, end_of_week, week_folder = get_week_range_info(target_date)
+    target_dir = os.path.join(base_dir, week_folder)
+    os.makedirs(target_dir, exist_ok=True)
+
+    existing_files = os.listdir(target_dir) if os.path.exists(target_dir) else []
+
+    # Xác định các ngày cần kiểm tra trong tuần
+    # Quét từ Thứ 2 đến ngày hiện tại (nếu trong tuần hiện tại) hoặc hết tuần làm việc
+    is_current_week = (get_week_range_info(datetime.now())[0] == week_num)
+    if is_current_week:
+        max_day = min(target_date.weekday(), 5 if include_saturday else 4)
+    else:
+        max_day = 5 if include_saturday else 4
+
+    days_to_check = []
+    for d_idx in range(max_day + 1):
+        d = start_of_week + timedelta(days=d_idx)
+        days_to_check.append(d)
+
+    created_files = []
+    print(f"\n" + "="*60)
+    print(f"  🔍 KIỂM TRA & TẠO BÙ GHI CHÚ DAILY CHO {week_folder.upper()}")
+    print("="*60)
+
+    for day in days_to_check:
+        date_pattern = day.strftime('%d%m%Y')
+        day_name = DAY_NAME_VI[day.weekday()]
+        date_display = day.strftime('%d/%m/%Y')
+        
+        has_file = False
+        found_name = ""
+        for f in existing_files:
+            if f.endswith(".md") and "Ghi chú" in f and date_pattern in f:
+                has_file = True
+                found_name = f
+                break
+        
+        if has_file:
+            print(f"  ✅ {date_display} ({day_name:8s}): ĐÃ CÓ -> {found_name}")
+        else:
+            file_name = f"Ghi chú {date_pattern}.md"
+            file_path = os.path.join(target_dir, file_name)
+            template = f"""# Ghi chú ngày {date_display} ({day_name})
+
+## 🎯 Mục tiêu trong ngày
+- [ ] 
+
+## 📝 Ghi chú công việc / Study
+- 
+
+## 💡 Ghi nhớ / Ideas
+- 
+
+---
+*Tạo tự động vào lúc {datetime.now().strftime('%H:%M:%S')}*
+"""
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(template)
+            created_files.append(file_path)
+            existing_files.append(file_name)
+            print(f"  ✨ {date_display} ({day_name:8s}): CHƯA CÓ -> Đã tạo bù: {file_name}")
+
+    print("="*60)
+    if created_files:
+        print(f"[SUCCESS] Đã tạo bù thành công {len(created_files)} file ghi chú còn thiếu!\n")
+    else:
+        print(f"[INFO] Tất cả các ngày đều đã có file ghi chú đầy đủ, không thiếu ngày nào.\n")
+
+    return created_files
 
 # ==============================================================================
 # 3. TRÍCH XUẤT NỘI DUNG & TỔNG HỢP SUMMARY TUẦN
@@ -897,6 +977,8 @@ if __name__ == "__main__":
         generate_all_summaries(force=force_flag)
     elif "--summary" in sys.argv:
         generate_weekly_summary(force=force_flag)
+    elif "--fill-missing" in sys.argv or "--fill" in sys.argv or "--create-missing" in sys.argv:
+        fill_missing_daily_notes()
     elif "--week" in sys.argv:
         idx = sys.argv.index("--week")
         if idx + 1 < len(sys.argv):

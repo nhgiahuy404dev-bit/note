@@ -90,6 +90,30 @@ git checkout -b <branch-name>-<endpoint>
 
 ---
 
+## 🛠️ Mẫu AI Prompt Cấu hình Test Setup & Teardown cho Helper
+
+### 🤖 Prompt cấu hình Reset & Restore Approval State cho User Group
+> [!TIP]
+> **Mục đích:** Sử dụng prompt này để yêu cầu AI viết code hook `test setup` và `teardown` trong file helper; lưu lại cấu hình hiện tại của nhóm `TEST_AUTOMATION`, ép về chế độ không cần duyệt (`pending_approval = false`) trong suốt quá trình chạy test và tự động khôi phục lại trạng thái ban đầu sau khi hoàn tất để triệt tiêu lỗi Flaky Test trên Jenkins.
+
+```markdown
+Please take a look at this `<link_path_helpers>`.
+
+I want to implement a test setup and teardown flow for user group settings:
+1. **Setup:**
+   - Get the current configuration of the `TEST_AUTOMATION` user group and remember/cache its initial state.
+   - Update the `TEST_AUTOMATION` user group setting so that it does not require `pending_approval` (always).
+
+2. **Teardown:**
+   - Set the `TEST_AUTOMATION` user group back to its previous state recorded during setup.
+```
+
+> [!NOTE]
+> **Tham số cần điền:**
+> - `<link_path_helpers>`: Đường dẫn tới file helper cấu hình trong repo kiểm thử.
+
+---
+
 ## 💡 Kế hoạch tiếp theo & Ghi nhớ
 - **Kế hoạch tiếp theo:** `[API-QA]` - `[QA-6700]` Triển khai automated tests cho Coordinator service endpoints `/instruction/request/status` (dự kiến ngày mai).
 
