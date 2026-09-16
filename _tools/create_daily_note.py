@@ -512,7 +512,7 @@ def format_weekly_summary_content(parsed_notes: List[Dict[str, Any]], week_num: 
         lines.append(f"  * {title_display}:")
         
         if t["is_endpoint"]:
-            lines.append("    * **Đã làm:** Xây dựng và triển khai automated test suite cho endpoint. Áp dụng đồng bộ **Quy trình chuẩn 11 bước triển khai kiểm thử tự động cho một Endpoint (Standard Flow for Endpoint Automation)**:")
+            lines.append("    * **Đã làm:** Xây dựng và triển khai automated test suite cho endpoint. Áp dụng đồng bộ **Quy trình chuẩn 12 bước triển khai kiểm thử tự động cho một Endpoint (Standard Flow for Endpoint Automation)**:")
             lines.append("        1. **Create Test Scenario Prompt:** Tạo prompt cho AI đọc các test steps và sinh ra bộ Scenarios để review.")
             lines.append("        2. **Create New Branch:** Tạo branch mới (chuẩn `<branch-name>-<endpoint>`) và chuyển trạng thái ticket sang `Testing`.")
             lines.append("        3. **Complete Scenario:** Hoàn thiện các Scenarios và review kỹ lưỡng trước khi bắt đầu viết code implementation.")
@@ -524,6 +524,7 @@ def format_weekly_summary_content(parsed_notes: List[Dict[str, Any]], week_num: 
             lines.append("        9. **Create PR Summary:** Soạn thảo bản tóm tắt nội dung PR.")
             lines.append("        10. **Create Pull Request:** Tạo Pull Request trên Git (GitHub).")
             lines.append("        11. **Update Review Status:** Cập nhật trạng thái ticket Jira sang **`Under Review`** khi hoàn tất endpoint.")
+            lines.append("        12. **Request Review (Dastan):** Đưa cho **Dastan** review PR và theo dõi feedback.")
             demo_items.append(f"Trình diễn Flow chuẩn triển khai Endpoint Automation & Bộ Test Suite (`{t['key']}`)")
         else:
             lines.append("    * **Đã làm:** Thực hiện kiểm thử nghiệp vụ và giao diện. Áp dụng **Quy trình kiểm thử Ticket thường (Standard Feature/UI Testing Workflow)** gồm 5 giai đoạn:")

@@ -65,7 +65,7 @@ Action items
    * Distinguish between completed, in-progress, blocked, or pending work when applicable.
    * Keep each item concise and easy to explain verbally.
    * **Quy chuẩn ghi chép chi tiết theo 2 luồng công việc (Testing Workflows):**
-     * **Workflow 1 - Endpoint Automation Testing (11 bước):** Áp dụng cho các ticket tự động hóa endpoint (như `QA-6700`, `QA-6703`), ghi rõ đủ 11 bước:
+     * **Workflow 1 - Endpoint Automation Testing (12 bước):** Áp dụng cho các ticket tự động hóa endpoint (như `QA-6700`, `QA-6703`), ghi rõ đủ 12 bước:
        1. `Create Test Scenario Prompt`: Tạo prompt cho AI đọc test steps và sinh Scenarios.
        2. `Create New Branch`: Tạo branch `<branch-name>-<endpoint>`, chuyển status sang `Testing`.
        3. `Complete Scenario`: Rà soát và hoàn thiện kịch bản trước khi code.
@@ -77,6 +77,7 @@ Action items
        9. `Create PR Summary`: Soạn thảo nội dung PR summary.
        10. `Create Pull Request`: Mở PR trên GitHub.
        11. `Update Review Status`: Chuyển status ticket sang `Under Review` khi hoàn thành endpoint.
+       12. `Request Review (Dastan)`: Đưa cho **Dastan** review PR và xử lý phản hồi.
      * **Workflow 2 - Feature / UI / Normal Ticket Testing (5 giai đoạn):** Áp dụng cho các ticket tính năng thường, UI, enhancement (như `GTO-16168`, `QA-6880`), ghi rõ 5 giai đoạn:
        1. `Read Request`: Đọc và phân tích yêu cầu kỹ thuật.
        2. `Designing`: Chuyển status sang `Designing`, thiết kế bộ test cases.

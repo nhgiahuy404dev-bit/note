@@ -13,10 +13,10 @@ Meeting sẽ chia ra làm các phần chính như sau:
 ### 🎯 `QA-6700` - Coordinator Service Endpoints Automation (11/09/2026)
 
 * **Endpoint 1: `GET /instruction/by-step-ref/{uniqueRef}` (11/09/2026):**
-  * **Trạng thái / Tiến độ:** Hoàn tất 11 bước ➔ **`Under Review`** (Đã tạo PR & gán reviewer).
+  * **Trạng thái / Tiến độ:** Hoàn tất 12 bước ➔ **`Under Review`** (Đã tạo PR & gán reviewer Dastan).
   * **Ngày hoàn thành:** 11/09/2026 (Thứ Sáu).
   * **Branch:** `QA-6700-instruction-by-step-ref`
-  * **Chi tiết thực hiện (Quy trình chuẩn 11 bước):**
+  * **Chi tiết thực hiện (Quy trình chuẩn 12 bước):**
     1. **Create Test Scenario Prompt:** Tạo prompt cho AI đọc các test steps, sinh bộ Scenarios kiểm tra response `200 OK`, schema dữ liệu và tính toàn vẹn của step execution reference.
     2. **Create New Branch:** Tạo branch độc lập `QA-6700-instruction-by-step-ref` từ `main` và chuyển trạng thái ticket sang `Testing`.
     3. **Complete Scenario:** Rà soát và hoàn thiện kịch bản Scenarios trước khi viết code test.
@@ -28,6 +28,7 @@ Meeting sẽ chia ra làm các phần chính như sau:
     9. **Create PR Summary:** Soạn thảo bản tóm tắt nội dung PR.
     10. **Create Pull Request:** Tạo Pull Request trên GitHub vào nhánh `main`.
     11. **Update Review Status:** Cập nhật trạng thái ticket Jira sang **`Under Review`**.
+    12. **Request Review (Dastan):** Đưa cho **Dastan** review PR và theo dõi phản hồi.
 * **Endpoint 2: `GET /instruction/request/status` (11/09/2026):**
   * **Trạng thái / Tiến độ:** **Tạm hoãn (Postponed)** — Dời kế hoạch thực hiện sang tuần tới.
   * **Ngày ghi nhận:** 11/09/2026 (Thứ Sáu).
@@ -39,7 +40,7 @@ Meeting sẽ chia ra làm các phần chính như sau:
   * **Trạng thái / Tiến độ:** Hoàn tất triển khai test ban đầu ➔ **`Under Review`** (Đang chờ duyệt PR).
   * **Ngày hoàn thành:** 08/09/2026 (Thứ Ba).
   * **Branch:** `QA-6703-ui-permission-pending`
-  * **Chi tiết thực hiện (Quy trình chuẩn 11 bước):**
+  * **Chi tiết thực hiện (Quy trình chuẩn 12 bước):**
     1. **Create Test Scenario Prompt:** Sử dụng prompt AI đọc test steps để tự động sinh Scenarios kiểm tra danh sách quyền chờ duyệt.
     2. **Create New Branch:** Tạo branch độc lập `QA-6703-ui-permission-pending` từ `main`, chuyển trạng thái sang `Testing`.
     3. **Complete Scenario:** Hoàn thiện kịch bản Scenarios kiểm tra dữ liệu pending permission.
@@ -51,19 +52,20 @@ Meeting sẽ chia ra làm các phần chính như sau:
     9. **Create PR Summary:** Soạn thảo tóm tắt PR.
     10. **Create Pull Request:** Tạo PR trên GitHub.
     11. **Update Review Status:** Cập nhật trạng thái ticket Jira sang **`Under Review`**.
+    12. **Request Review (Dastan):** Đưa cho **Dastan** review PR và theo dõi phản hồi.
 * **Endpoint 2: `ui/permission/rule - config` (08/09/2026 - 11/09/2026):**
   * **Trạng thái / Tiến độ:** **`In Progress`** (Đang tiếp tục hoàn thiện kịch bản & code test).
   * **Thời gian thực hiện:** 08/09/2026 - 11/09/2026 (Hoàn thành Scenario ngày 08/09, đang tiếp tục hoàn thiện negative cases).
   * **Branch:** `QA-6703-ui-permission-rule-config`
-  * **Chi tiết thực hiện (Theo quy trình 11 bước):**
+  * **Chi tiết thực hiện (Theo quy trình 12 bước):**
     * Đã hoàn thành các bước 1 ➔ 5: Tạo Scenario bằng AI, lập branch riêng, hoàn thiện kịch bản cấu hình tham số quy tắc (rule config), triển khai code test và chạy thử kịch bản chính.
-    * Đang thực hiện các bước 6 ➔ 11: Mở rộng các kịch bản biên (edge cases), negative test, cập nhật TestRail và chuẩn bị tạo PR.
+    * Đang thực hiện các bước 6 ➔ 12: Mở rộng các kịch bản biên (edge cases), negative test, cập nhật TestRail, chuẩn bị tạo PR và đưa Dastan review.
 
 ### 🎯 `QA-6880` (GTO-16245, GTO-16246) - Restrict retry of a failed transfer to ops users only, and drop the retry time window (10/09/2026)
 
 * **Đã làm:** Phân tích yêu cầu nghiệp vụ về việc giới hạn quyền retry các giao dịch failed chỉ dành riêng cho Ops users, đồng thời loại bỏ cửa sổ giới hạn thời gian retry. Đã hoàn thành thiết kế ma trận kịch bản kiểm thử (Test Scenario Matrix) và bản thảo Test Execution.
 * **Ngày hoàn thành thiết kế (Design):** 10/09/2026 (Thứ Năm).
-* **Tiến độ hiện tại:** In Progress (Đang thực hiện). Đang chờ Dev deploy code lên môi trường staging/test để bắt đầu tiến hành kiểm thử thực tế (cập nhật ngày 11/09/2026).
+* **Tiến độ hiện tại:** Hoàn tất giai đoạn thiết kế kịch bản test. Đang chờ Dev deploy bản fix lên môi trường test để thực thi quy trình nghiệm thu.
 
 ### 🎯 `GTO-16168` - Split Fireblocks section into Vault and Whitelisted Address (07/09/2026)
 
@@ -86,7 +88,7 @@ Meeting sẽ chia ra làm các phần chính như sau:
 * Demo feature đã / đang làm:
 
   * **Demo 1: Trình diễn Flow chuẩn triển khai Endpoint Automation & Bộ Test Coordinator (`QA-6700`):**
-    * Trình diễn toàn bộ chu trình 11 bước từ tạo Scenario bằng AI, tạo branch, run test pass 100%, cập nhật TestRail đến mở PR và cập nhật trạng thái ticket sang `Under Review`.
+    * Trình diễn toàn bộ chu trình 12 bước từ tạo Scenario bằng AI, tạo branch, run test pass 100%, cập nhật TestRail, mở PR, cập nhật trạng thái ticket sang `Under Review` đến đưa cho Dastan review.
     * Thực thi test tự động kiểm thử endpoint `GET /instruction/by-step-ref/{uniqueRef}` với assertion chuẩn xác.
   * **Demo 2: Trình diễn Flow chuẩn & Bộ Test Permission Service (`QA-6703`):**
     * Trình diễn áp dụng quy trình chuẩn cho endpoint Permission: chạy test kiểm tra danh sách quyền đang chờ duyệt (`ui/permission/pending`) và cấu hình tham số quy tắc (`ui/permission/rule - config`).
