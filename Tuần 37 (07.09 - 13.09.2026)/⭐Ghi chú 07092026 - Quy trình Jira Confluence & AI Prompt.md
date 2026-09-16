@@ -19,7 +19,7 @@
 
 ## ⚙️ Quy trình thực hiện & Mẫu AI Prompt chuẩn
 
-### 🤖 1. Prompt tạo Draft Test Execution & Slash Command từ Jira / Confluence
+### 🤖 1. Prompt tạo Draft Test Execution & Slash Command từ Jira / Confluence (BÂY GIỜ ĐÃ CÓ COMMAD /create-draft-test-execution)
 > [!TIP]
 > Sử dụng mẫu prompt dưới đây để yêu cầu AI đọc tổng thể ticket Jira, tài liệu Confluence, GitHub PR và Slack thread; từ đó tổng hợp thành file Markdown đặc tả Test Execution và tự động sinh Slash Command phục vụ tự động hóa.
 
