@@ -145,6 +145,15 @@ Trước khi tạo Pull Request, bắt buộc tự rà soát mã nguồn:
 * **Xử lý phản hồi (`/resolve-pr`):**
   - Đọc kỹ feedback của Reviewer ➔ Sửa code ➔ Commit và Push lên branch.
   - Chạy `/resolve-pr` (hoặc Resolve Conversation) để đóng các luồng comment đã giải quyết xong.
+* **Mẫu tin nhắn nhờ đồng nghiệp Review PR (Slack / Teams):**
+  ```text
+  Hi [Tên],
+
+  Could you please help me review my PR when you have time?
+  [Dán link PR vào đây]
+
+  Thank you so much!
+  ```
 
 ---
 
@@ -172,25 +181,20 @@ flowchart TD
         A --> B
     end
 
-    %% Subgraph 2: Chuẩn hóa & Phân tách Scope
-    subgraph G2 [" 📋 GIAI ĐOẠN 2: CHUẨN HÓA JIRA & ĐÁNH GIÁ PHẠM VI "]
+    %% Subgraph 2: Chuẩn hóa & Tạo Test Artifact
+    subgraph G2 [" 📋 GIAI ĐOẠN 2: CHUẨN HÓA JIRA & TẠO TEST ARTIFACT "]
         direction TB
         C["📝 3. Chuẩn hóa Description & Table Jira<br><b>⚠️ Bắt buộc ghi rõ Endpoint API</b>"]
-        D{"⚖️ 4. Đánh giá Scope Ticket?"}
-        D1["✂️ Tách làm 2 Ticket riêng<br><i>(Nghiệp vụ lớn / Luồng độc lập)</i>"]
-        D2["📦 Gộp chung 1 File / Ticket<br><i>(Kịch bản ngắn / Cùng ngữ cảnh)</i>"]
-        
+        D["📄 4. Chạy <code>/create-test-artifact</code><br><i>(Đồng bộ tài liệu sang Confluence ngay khi tạo ticket Jira xong)</i>"]
         C --> D
-        D -- "Scope lớn / Độc lập" --> D1
-        D -- "Scope ngắn / Liền mạch" --> D2
     end
 
-    %% Subgraph 3: Nghiệm thu & Thực thi
-    subgraph G3 [" 🚀 GIAI ĐOẠN 3: NGHIỆM THU DEV & THỰC THI KIỂM THỬ "]
+    %% Subgraph 3: Review Dev & Thực thi Staging
+    subgraph G3 [" 🚀 GIAI ĐOẠN 3: DEV REVIEW & THỰC THI KIỂM THỬ "]
         direction TB
-        E["💬 5. Gửi Dev Review Test Section trên Slack<br><i>(Bắt buộc Dev duyệt trước khi làm Artifact)</i>"]
-        F["✅ Dev xác nhận Review OK"]
-        G["🚀 6. Chạy <code>/create-test-artifact</code><br><b>➔ Bắt đầu Thực thi Test (Execution)</b>"]
+        E["💬 5. Gửi Dev Review Test Section trên Slack<br><i>(Gửi link Jira / Confluence chốt Test Scope)</i>"]
+        F["✅ Dev xác nhận Review OK & Deploy Staging"]
+        G["🚀 6. Chuyển Jira sang <code>Testing</code><br><b>➔ Chạy <code>/Create-TR-Run-From-TR-Draft</code> & Thực thi Test</b>"]
         
         E --> F
         F --> G
@@ -198,8 +202,7 @@ flowchart TD
 
     %% Kết nối giữa các Giai đoạn
     B ==> C
-    D1 --> E
-    D2 --> E
+    D ==> E
 
     %% Styling
     classDef phase1 fill:#f0f9ff,stroke:#0284c7,stroke-width:1.5px,color:#0369a1,rx:8px,ry:8px;
@@ -210,9 +213,7 @@ flowchart TD
     classDef finalDef fill:#eff6ff,stroke:#2563eb,stroke-width:2.5px,color:#1d4ed8,rx:10px,ry:10px;
 
     class A,B phase1;
-    class C phase2;
-    class D decisionDef;
-    class D1,D2 branchDef;
+    class C,D phase2;
     class E,F phase3;
     class G finalDef;
 ```
@@ -225,10 +226,10 @@ flowchart TD
 | :---: | :---: | :--- | :--- | :--- |
 | **Giai đoạn 1** | **1** | **Khởi tạo Draft** | Claude + `/create-draft-test-execution` | Dán link tài liệu yêu cầu (Jira/Confluence/PR); AI tự phân tích và sinh kịch bản. |
 | *(Khởi tạo)* | **2** | **Self-Review** | Visual Studio Code | Mở file `.md` vừa sinh, đọc kỹ từng test step, đối chiếu logic nghiệp vụ. |
-| **Giai đoạn 2** | **3** | **Chuẩn hóa Jira** | Prompt đối chiếu ticket mẫu | **Bắt buộc ghi rõ Endpoint** (`URL`, `Method`, `Payload`) để Dev hiểu rõ API call. |
-| *(Chuẩn hóa)* | **4** | **Phân tách Scope** | Đánh giá độ phức tạp | Tách 2 ticket riêng nếu luồng độc lập/dài; gộp 1 file nếu ngắn gọn. |
-| **Giai đoạn 3** | **5** | **Gửi Dev Review** | Kênh Slack (`@dev_name`) | Nhắn Dev phụ trách review; **tuyệt đối không tự ý làm Artifact khi chưa duyệt**. |
-| *(Nghiệm thu)* | **6** | **Tạo Artifact & Test** | `/create-test-artifact` | Sau khi Dev duyệt OK, sinh test artifact chuẩn và tiến hành chạy test. |
+| **Giai đoạn 2** | **3** | **Chuẩn hóa Jira** | Description & Table Jira | **Bắt buộc ghi rõ Endpoint** (`URL`, `Method`, `Payload`) để Dev hiểu rõ API call. |
+| *(Tạo Artifact)* | **4** | **Tạo Test Artifact** | `/create-test-artifact` | **Tạo ngay khi tạo ticket Jira xong** để đồng bộ tài liệu sang Confluence. |
+| **Giai đoạn 3** | **5** | **Gửi Dev Review** | Kênh Slack (`@dev_name`) | Gửi link Jira/Confluence để Dev review và chốt phạm vi kiểm thử (Test Scope). |
+| *(Thực thi)* | **6** | **Thực thi Staging** | `/Create-TR-Run-From-TR-Draft` | Khi Dev deploy Staging ➔ Chuyển `Testing`, tạo Test Run trên TestRail và chạy test. |
 
 1. **Khởi tạo Draft Test Case qua AI (Claude):**
    - Lấy link tài liệu yêu cầu nghiệp vụ (**Requirement / Confluence spec / Jira ticket**).
@@ -246,21 +247,22 @@ flowchart TD
      ```
    - > [!IMPORTANT]
      > **Lưu ý bắt buộc về Endpoint:** Khi mô tả API call, **bắt buộc phải ghi rõ Endpoint** (`URL`, `Method`, `Payload`) — cần xác định chính xác đang gọi vào endpoint nào và cơ chế thực thi ra sao.
-4. **Xác định cấu trúc Ticket (Tách hay Gộp):**
-   - **Tách làm 2 ticket riêng:** Nếu các nghiệp vụ riêng lẻ, phạm vi lớn hoặc luồng xử lý độc lập.
-   - **Gộp chung 1 file/ticket:** Nếu kịch bản ngắn, liền mạch và cùng ngữ cảnh tính năng.
-5. **Gửi Dev Review trước khi làm Test Artifact:**
-   - Sau khi cập nhật Test Section lên Jira, **bắt buộc đưa cho Dev review và chốt trước**.
-   - > [!WARNING]
-     > **Tuyệt đối không tự ý làm Test Artifact khi Dev chưa review và đồng thuận với Test Section.**
-   - Mẫu tin nhắn gửi trên kênh Slack:
-     > 💬 *"Hi @<dev_name>, I have added the test section here: `<link_ticket_jira>`. Please help reviewing. Thank you!"*
-6. **Tạo Test Artifact & Tiến hành thực thi:**
-   - Khi Dev đã review và xác nhận **OK** ➔ Chạy tiếp slash command:
+4. **Tạo Test Artifact đồng bộ sang Confluence (`/create-test-artifact`):**
+   - **Thực hiện ngay khi tạo ticket Jira xong:** Sau khi cập nhật Description và Table lên Jira, chạy ngay lệnh:
      ```bash
      /create-test-artifact
      ```
-   - Sau khi hoàn tất Test Artifact, bắt đầu tiến hành thực thi kiểm thử (**Execute Tests**).
+   - Lệnh này tự động đồng bộ tài liệu đặc tả kiểm thử sang trang Confluence liên quan.
+5. **Gửi Dev Review Test Section trên Slack:**
+   - Sau khi đã có ticket Jira và Test Artifact Confluence, gửi tin nhắn trao đổi trên Slack cho Dev phụ trách tính năng để chốt phạm vi kiểm thử:
+     > 💬 *"Hi @<dev_name>, I have added the test section here: `<link_ticket_jira>`. Please help reviewing. Thank you!"*
+6. **Bật Testing & Thực thi khi Dev deploy Staging:**
+   - Khi Dev hoàn tất build và xác nhận deploy bản test lên Staging ➔ Chuyển trạng thái ticket Jira sang **`Testing`** 🚀.
+   - Khởi tạo Test Run trên TestRail bằng lệnh **`/Create-TR-Run-From-TR-Draft`** và tiến hành thực thi kiểm thử (**Execute Tests**).
+7. **Nghiệm thu (Pass Test) & Gán Reviewer:**
+   - Khi toàn bộ test case đạt **100% Passed** ➔ Chuyển trạng thái ticket Jira sang **`Pass Test`** ✅.
+   - Gán các reviewer chính (**Mohit**, **Dastan**, **Sandeep**) để nghiệm thu và đóng ticket.
+
 
 ---
 
@@ -292,11 +294,16 @@ I want to implement a test setup and teardown flow for user group settings:
   - `Suite ID UI`: **946**
   - `Suite ID E2E`: **947**
 
-### 5.2. Phân biệt các lệnh TestRail
+### 5.2. Phân biệt các lệnh TestRail theo Loại công việc
 
-* **`/create-testrail`:** Chỉ thực hiện tạo test case trên TestRail, **không** tác động hay cập nhật gì lên Jira ticket.
-* **`/sync-testrail`:** **Đồng bộ và cập nhật (update)** ID test cases và kết quả trực tiếp lên Jira ticket.
+#### A. Dành riêng cho Endpoint Testing (API-QA / Backend):
+* **`/create-testrail`:** Dành cho **Endpoint** — Chỉ thực hiện tạo test case trên TestRail, **không** tác động hay cập nhật gì lên Jira ticket.
+* **`/sync-testrail`:** Dành cho **Endpoint** — **Đồng bộ và cập nhật (update)** ID test cases và kết quả trực tiếp lên Jira ticket.
 * *Khi xử lý file lớn:* Tránh dùng file local chưa đồng bộ để tránh lệch dữ liệu với live.
+
+#### B. Dành cho Test Execution từ Tài liệu Spec (Confluence & Jira):
+* **`/Create-testrail-cases-from-confluence`:** Tự động phân tích tài liệu đặc tả (**Confluence spec**) và thông tin **Jira Ticket** để sinh bộ test cases chuẩn lên hệ thống TestRail một cách nhanh chóng, chính xác.
+* **`/Create-TR-Run-From-TR-Draft`:** Khởi tạo Test Run trên TestRail từ các Test Cases nháp (Draft) được sinh từ Confluence/Jira; dùng trong giai đoạn **Testing** để ước lượng thời gian chạy (estimate), thực thi kiểm thử và xác nhận chuyển toàn bộ trạng thái sang **All Passed**.
 
 ### 5.3. Quy chuẩn Báo cáo Daily Report cuối ngày (`/daily-report`)
 
@@ -373,6 +380,14 @@ Jenkins là một **hệ thống CI/CD (Continuous Integration / Continuous Deli
 Khi Jenkins kích hoạt chế độ **Re-run** cho các test case thất bại:
 - Hệ thống sẽ sinh ra **nhiều file kết quả (multi-file results)** tương ứng với từng lượt chạy.
 - Script xử lý thông báo bắt buộc phải đọc, gom và tổng hợp toàn diện dữ liệu từ tất cả các file kết quả để thông báo gửi về kênh Slack phản ánh chính xác kết quả cuối cùng (tránh việc kết quả lượt chạy sau ghi đè hoặc làm mất thông tin lượt chạy trước).
+
+---
+
+### 7.4. Vị trí lấy thông tin tài khoản Okta 3 (`test_okta_qa_user3`)
+
+* **Thư mục chứa file:** `Study_GALAXY/api-qa-resolve-pr2/`
+* **File lấy tài khoản:** `.env.qa` hoặc `.env.uat` (tìm dòng `OPS_SECRET_SUFFIX3` hoặc `OPS_SECRET_URL3`)
+* **Đường dẫn trên AWS Secrets Manager:** `qa/secret_server_cloud/test_okta_qa_user3` (hoặc `uat/...`)
 
 ---
 
@@ -456,6 +471,22 @@ Wave 1: Migration & Seed (DDL, schema, ràng buộc NULLS NOT DISTINCT, account 
 5. **Xử lý bẫy sàn trả về HTTP 200 kèm error message trong body:**
    - Một số sàn đối tác trả về HTTP status code là `200 OK` nhưng cấu trúc JSON bên trong lại chứa thông báo lỗi nghiệp vụ (`"error": [...]` hoặc `"status": "REJECTED"`).
    - Test script và service bắt buộc phải kiểm tra sâu vào body response; nếu có lỗi phải cập nhật trạng thái lệnh sang **`FAILED`**, tuyệt đối không được dựa vào mỗi HTTP status 200 để đánh dấu thành công.
+
+---
+
+### 9.3. Kỹ thuật nạp biến môi trường khi Test Database trực tiếp (Direct DB Query)
+
+> [!IMPORTANT]
+> **Bắt buộc nạp cấu hình môi trường bằng `load_dotenv()`:**  
+> Khi phát triển các test cases chỉ thực thi truy vấn (**query**) trực tiếp tới cơ sở dữ liệu (**Database/DB**) mà không thông qua app context/server container thông thường, hệ thống sẽ không tự động nạp các biến môi trường cấu hình DB.  
+> ➔ **Bắt buộc** phải thêm hàm `load_dotenv()` ở đầu file test để nạp cấu hình (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_PORT`) từ file `.env`, tránh lỗi ngắt kết nối Database khi chạy test độc lập.
+
+```python
+from dotenv import load_dotenv
+
+# Bắt buộc nạp cấu hình .env trước khi khởi tạo kết nối Database
+load_dotenv()
+```
 
 ---
 
