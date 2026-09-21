@@ -3,13 +3,24 @@
 
 ---
 
-## 1. QUY TRÌNH VIẾT AUTOMATION TEST
-Các bước cơ bản để xây dựng kịch bản tự động hóa:
-1. **Đọc requirement:** Nắm rõ yêu cầu của task và nghiệp vụ bài toán.
-2. **Viết prompt:** Chuẩn bị câu lệnh (prompt) rõ ràng, chi tiết.
-3. **Làm việc với AI:** Yêu cầu AI kiểm tra (check) và thiết lập kịch bản (scenario).
-4. **Review & Chỉnh sửa:** Kiểm tra lại kết quả do AI sinh ra và sửa chữa các điểm chưa hợp lý.
-5. **Chạy thử:** Hoàn thiện kịch bản và tiến hành chạy thử nghiệm (execute test).
+## 1. QUY TRÌNH CHUẨN 15 BƯỚC VIẾT AUTOMATION TEST (WORKFLOW 1)
+Áp dụng cho các ticket có tag `[API-QA]`, `endpoint`, `parsing`, hoặc `automation BE`:
+
+1. **Create Test Scenario Prompt:** Tạo prompt AI đọc test steps / API spec để tự động sinh Scenarios cho endpoints/logic cần test (Happy Path, Negative, Boundary, Adverse).
+2. **Create New Branch:** Tạo branch độc lập `<branch-name>-<endpoint>` từ `main`, chuyển status Jira sang `In Project`. *(Quy tắc 1 branch - 1 endpoint)*.
+3. **Complete Scenario:** Rà soát và hoàn thiện kịch bản kiểm thử (preconditions, headers, payload, response assertions) trước khi code.
+4. **Review Code:** Tự review code test script, fixtures, auth headers. Nếu test tương tác Database bắt buộc gọi `load_dotenv()` ở đầu file.
+5. **Run Code:** Thực thi chạy bộ test suite automation trên môi trường cục bộ đảm bảo **Pass 100%**.
+6. **Fix Code:** Sửa các lỗi phát sinh về assertion, xử lý ngoại lệ và kiểu dữ liệu trả về từ parser.
+7. **Create TestRail:** Dùng `/create-testrail` để tạo mới test cases trên TestRail và `/sync-testrail` để đồng bộ ID test cases trực tiếp lên Jira ticket.
+8. **Run Review Code:** Chạy lại toàn bộ test suite sau khi tạo TestRail để đảm bảo không có regression (Pass 100%).
+9. **Check Orphan Functions:** Kiểm tra và dọn dẹp các hàm mồ côi (orphan functions) sau khi hoàn thành bằng lệnh `/review-code`.
+10. **Kiểm tra model Pydantic:** Rà soát lại toàn bộ model Pydantic đảm bảo khớp 100% với response schema thực tế, không bị thiếu trường hoặc crash type.
+11. **Commit and Push Code:** Commit với message chuẩn convention và push code lên remote branch.
+12. **Create PR Summary:** Chạy slash command `/pr summary` để AI tự động tạo phần tóm tắt cho Pull Request.
+13. **Create Pull Request:** Tạo PR trên GitHub vào nhánh `main`, dán nội dung PR summary, đính kèm evidence test Pass 100% và gán reviewer (**Dastan**).
+14. **Update Review Status:** Gán link PR vào Jira ticket và chuyển trạng thái ticket sang **`Under Review`**.
+15. **Request Review & Merge ➔ `Done` ✅:** Đưa cho **Dastan** review PR, xử lý feedback qua `/resolve-pr`, nhận approval và merge vào nhánh chính; chuyển Jira sang **`Done`** ✅.
 
 ---
 

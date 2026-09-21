@@ -1,2 +1,14 @@
 đầu tiên là password login máy
 1234qwfp@K8b
+
+Ticket main / Epic liên kết khi test:
+QA-3614: Transfer Tools Enhancement and feedback
+
+Quy tắc Linked Work Items trên Jira (Bước 3 - Chuyển sang Designing):
+- Trạng thái / Mối quan hệ (Link Type): tests
+- Link trực tiếp tới Request Ticket tương ứng (VD: tests GTO-xxxx)
+- Chuyển trạng thái ticket Jira sang: Designing
+
+Mẫu tin nhắn Slack nhờ Ops (@tiffany.kao, @jento.chan) UAT Testing (khi Pass Test QA):
+hi @tiffany.kao , @jento.chan we have completed testing for <TICKET_LINK> on QA environment. And we already set it up on UAT environment, please help testing it on UAT. Thank you! 🙏
+UAT UI deployed at: web-reports.uat-gp.galaxydigital.io/fund_transfer_tool

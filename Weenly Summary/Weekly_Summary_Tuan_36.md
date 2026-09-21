@@ -10,6 +10,17 @@ Meeting sẽ chia ra làm các phần chính như sau:
 
 * List ra trong tuần rồi đã / đang làm ticket nào, progress như thế nào rồi:
 
+### 📊 Bảng tổng hợp các Ticket trong tuần (Ticket Summary)
+
+| STT | Ticket ID | Nội dung công việc | Phân loại | Thời gian | Trạng thái (Jira) | Ghi chú / Kết quả |
+| :---: | :--- | :--- | :--- | :---: | :---: | :--- |
+| 1 | `QA-6742`<br><sub>(GTO-16043)</sub> | Fiat withdrawal UI + E2E (Transfer Tool) | UI & E2E Testing | Tuần 36 | **`Pass Test`** ✅ | Hoàn thành bao phủ 100% test cases UI-1 đến UI-9 & E2E |
+| 2 | `QA-6741`<br><sub>(GTO-15979)</sub> | Fiat withdrawal initiation (Transfer Tool) — Phase 5 | Backend Testing Design | Tuần 36 | **`Designing`** 📝 | Hoàn thành ma trận kiểm thử 7 nhóm (MIG đến STA) & Details Step |
+
+---
+
+### Chi tiết tiến độ từng ticket:
+
   * **`QA-6742` (GTO-16043) - Fiat withdrawal UI + E2E (Transfer Tool):**
     * **Đã làm:** Hoàn thành kiểm thử thủ công toàn diện giao diện rút tiền Fiat trên Transfer Tool theo ma trận từ `UI-1` đến `UI-9`. Kiểm tra kỹ tính năng cập nhật ngày (Value date / Update date) trên form nhập liệu và kiểm tra các luồng End-to-End (`E2E-1` đến `E2E-4`) từ giao diện Frontend xuống Backend.
     * **Tiến độ hiện tại:** Hoàn thành kiểm thử UI & E2E thủ công (Bao phủ 100% test cases UI, xác minh đầy đủ các UI guards và tính hợp lệ của form).

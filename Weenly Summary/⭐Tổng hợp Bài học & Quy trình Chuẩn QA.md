@@ -157,79 +157,80 @@ Trước khi tạo Pull Request, bắt buộc tự rà soát mã nguồn:
 
 ---
 
+### 3.4. Quy trình Chuẩn 15 Bước Endpoint Automation Testing (Workflow 1)
+
+Áp dụng cho các ticket có tag `[API-QA]`, `endpoint`, `parsing`, hoặc `automation BE`:
+
+#### 📊 Bảng tổng hợp chi tiết 15 bước:
+
+| Giai đoạn | Bước | Tên Bước | Công cụ / Lệnh | Yêu cầu chất lượng & Thao tác cốt lõi |
+| :---: | :---: | :--- | :--- | :--- |
+| **Giai đoạn 1**<br>*(Chuẩn bị & Phân tích)* | **1** | **Create Test Scenario Prompt** | Claude / AI Prompt | Phân tích API spec, tạo prompt AI sinh bộ Scenarios bao quát (Happy Path, Negative, Boundary, Adverse). |
+| | **2** | **Create New Branch** | Git CLI | Rẽ nhánh độc lập `<branch-name>-<endpoint>` từ `main`, chuyển Jira sang **`In Project`**. *(1 branch - 1 endpoint)*. |
+| | **3** | **Complete Scenario** | VS Code / Markdown | Rà soát và hoàn thiện kịch bản chi tiết trước khi code (preconditions, headers, payload, assertions). |
+| **Giai đoạn 2**<br>*(Viết Code & Thực thi)* | **4** | **Review Code** | Visual Studio Code | Tự review mã nguồn test script, fixture, auth headers. Nếu test tương tác DB bắt buộc gọi `load_dotenv()`. |
+| | **5** | **Run Code** | Test Runner cục bộ | Chạy test suite automation trên máy cục bộ đảm bảo **Pass 100%**. |
+| | **6** | **Fix Code** | VS Code / Python | Khắc phục triệt để các lỗi assertion, xử lý ngoại lệ, type mismatch hoặc dữ liệu trả về từ parser. |
+| **Giai đoạn 3**<br>*(TestRail & Tối ưu)* | **7** | **Create TestRail** | `/create-testrail` & `/sync-testrail` | Khởi tạo test cases lên TestRail (`/create-testrail`) và đồng bộ ID trực tiếp lên Jira (`/sync-testrail`). |
+| | **8** | **Run Review Code** | Test Runner cục bộ | Chạy lại toàn bộ test suite cục bộ để đảm bảo không bị regression sau khi liên kết TestRail (Pass 100%). |
+| | **9** | **Check Orphan Functions** | `/review-code` | Quét và dọn dẹp triệt để các hàm mồ côi (orphan functions) không còn được sử dụng trong repo. |
+| | **10** | **Kiểm tra model Pydantic** | Pydantic / Python | Rà soát model data đảm bảo khớp 100% response schema thực tế, tránh crash type hoặc thiếu trường. |
+| **Giai đoạn 4**<br>*(Git, PR & Nghiệm thu)* | **11** | **Commit and Push Code** | Git CLI | Commit với message chuẩn convention và push nhánh lên GitHub remote. |
+| | **12** | **Create PR Summary** | `/pr summary` | Dùng AI tự động trích xuất bản tóm tắt nội dung thay đổi code cho Pull Request. |
+| | **13** | **Create Pull Request** | GitHub Web | Mở PR vào nhánh `main`, dán PR summary và đính kèm evidence pass test 100%. |
+| | **14** | **Update Review Status** | Jira Ticket | Cập nhật trạng thái ticket Jira sang **`Under Review`** và gán link PR. |
+| | **15** | **Request Review & Merge** | Slack (`@dastan`) | Gửi **Dastan** review PR, resolve feedback qua `/resolve-pr`, merge vào `main` ➔ Jira **`Done`** ✅. |
+
+#### 📌 Chi tiết từng bước thực hiện:
+
+1. **Bước 1: Create Test Scenario Prompt:** Đọc kỹ API spec / requirement, viết prompt chi tiết để AI phân tích và sinh bộ kịch bản test đầy đủ 4 tầng (Happy Path, Negative, Boundary, Adverse).
+2. **Bước 2: Create New Branch:** Kéo code mới nhất từ `main` và tạo branch độc lập `<branch-name>-<endpoint>`, chuyển Jira sang `In Project`. Tuân thủ: 1 Branch - 1 Endpoint.
+3. **Bước 3: Complete Scenario:** Mở file markdown do AI sinh, hoàn thiện preconditions, test steps, payload và expected assertions.
+4. **Bước 4: Review Code:** Tự review code test script, fixtures, auth headers. Bắt buộc gọi `load_dotenv()` ở đầu file nếu test truy vấn DB.
+5. **Bước 5: Run Code:** Thực thi chạy bộ test suite automation trên môi trường cục bộ đảm bảo **Pass 100%**.
+6. **Bước 6: Fix Code:** Sửa các lỗi assertion fail, type mismatch hoặc format response cho đến khi toàn bộ test cases đều Pass.
+7. **Bước 7: Create TestRail:** Dùng lệnh `/create-testrail` để tạo mới test cases trên TestRail và `/sync-testrail` để đồng bộ ID test cases trực tiếp lên Jira ticket.
+8. **Bước 8: Run Review Code:** Chạy lại toàn bộ test suite cục bộ để đảm bảo việc liên kết TestRail không gây ra lỗi hồi quy (regression) và vẫn Pass 100%.
+9. **Bước 9: Check Orphan Functions (`/review-code`):** Chạy `/review-code` để AI quét và xóa các hàm mồ côi (không còn được gọi trong suite).
+10. **Bước 10: Kiểm tra model Pydantic:** Rà soát các model Pydantic khớp 100% với JSON response thực tế, không thiếu trường, tránh lỗi ValidationError trên CI/CD.
+11. **Bước 11: Commit and Push Code:** Commit với message chuẩn convention và push code lên remote branch.
+12. **Bước 12: Create PR Summary:** Chạy lệnh `/pr summary` để AI tự động tạo phần tóm tắt cho Pull Request.
+13. **Bước 13: Create Pull Request:** Mở PR trên GitHub vào nhánh `main`, dán nội dung PR summary, đính kèm ảnh chụp màn hình test Pass 100% và gán reviewer (**Dastan**).
+14. **Bước 14: Update Review Status:** Gán link PR vào Jira ticket và chuyển trạng thái ticket sang **`Under Review`**.
+15. **Bước 15: Request Review & Merge ➔ `Done` ✅:** Nhắn Dastan trên Slack nhờ review PR, xử lý góp ý qua `/resolve-pr`, merge vào `main` và chuyển Jira sang **`Done`** ✅.
+
+---
+
 ## 4. QUY TRÌNH ỨNG DỤNG AI & AUTOMATION WORKFLOW (CẬP NHẬT MỚI NHẤT)
 
-> [!NOTE]
-> **Cập nhật mới:** Hiện tại đã có các slash commands chuyên dụng **`/create-draft-test-execution`** và **`/create-test-artifact`**, thay thế cho quy trình copy prompt thủ công trước đây.
+> [!CAUTION]
+> ### ⚠️ QUY TẮC TIÊN QUYẾT TRƯỚC KHI TẠO DRAFT / LÀM TICKET (CHỐNG DUPLICATED)
+> Trước khi bắt tay vào làm bất kỳ ticket Test Execution nào và trước khi khởi tạo Draft Test Cases:
+> 1. **BẮT BUỘC PHẢI HỎI DASTAN:** Nhắn tin trực tiếp hỏi Dastan xem anh ấy **đã tạo draft ticket hoặc kịch bản kiểm thử (draft test cases) cho ticket đó chưa**.
+> 2. **LÝ DO QUAN TRỌNG:** Tránh việc cả hai cùng tạo độc lập dẫn tới **bị duplicated (trùng lặp ticket / duplicate test cases)** trên Jira và TestRail, gây lãng phí thời gian và xung đột dữ liệu.
+> 
+> **Mẫu tin nhắn Slack hỏi Dastan trước khi làm:**
+> > 💬 *"Hi Dastan, for ticket `<TICKET_ID>` (`<TICKET_NAME>`), have you created the draft ticket or test cases yet? If not, I will start creating the draft test execution."*
 
-### 4.1. Sơ đồ Quy trình Chuẩn 6 Bước (Draft Test Case ➔ Test Artifact ➔ Execution)
-
-<p align="center">
-  <img src="assets/quy_trinh_test_execution_6_buoc.png" alt="Sơ đồ Quy trình Chuẩn 6 Bước Test Execution" width="650" />
-</p>
-
-<details>
-<summary><b>🔍 Nhấn vào đây để xem / sao chép mã nguồn Mermaid của sơ đồ</b></summary>
-
-```mermaid
-flowchart TD
-    %% Subgraph 1: Khởi tạo & Review
-    subgraph G1 [" 🤖 GIAI ĐOẠN 1: KHỞI TẠO & RÀ SOÁT KỊCH BẢN "]
-        direction TB
-        A["🤖 1. Khởi tạo Draft qua Claude<br><code>/create-draft-test-execution</code><br><i>(Dán link Requirement / Jira / Confluence)</i>"]
-        B["🔍 2. Mở VS Code kiểm tra kịch bản<br><i>(Rà soát logic test steps & đối chiếu spec)</i>"]
-        A --> B
-    end
-
-    %% Subgraph 2: Chuẩn hóa & Tạo Test Artifact
-    subgraph G2 [" 📋 GIAI ĐOẠN 2: CHUẨN HÓA JIRA & TẠO TEST ARTIFACT "]
-        direction TB
-        C["📝 3. Chuẩn hóa Description & Table Jira<br><b>⚠️ Bắt buộc ghi rõ Endpoint API</b>"]
-        D["📄 4. Chạy <code>/create-test-artifact</code><br><i>(Đồng bộ tài liệu sang Confluence ngay khi tạo ticket Jira xong)</i>"]
-        C --> D
-    end
-
-    %% Subgraph 3: Review Dev & Thực thi Staging
-    subgraph G3 [" 🚀 GIAI ĐOẠN 3: DEV REVIEW & THỰC THI KIỂM THỬ "]
-        direction TB
-        E["💬 5. Gửi Dev Review Test Section trên Slack<br><i>(Gửi link Jira / Confluence chốt Test Scope)</i>"]
-        F["✅ Dev xác nhận Review OK & Deploy Staging"]
-        G["🚀 6. Chuyển Jira sang <code>Testing</code><br><b>➔ Chạy <code>/Create-TR-Run-From-TR-Draft</code> & Thực thi Test</b>"]
-        
-        E --> F
-        F --> G
-    end
-
-    %% Kết nối giữa các Giai đoạn
-    B ==> C
-    D ==> E
-
-    %% Styling
-    classDef phase1 fill:#f0f9ff,stroke:#0284c7,stroke-width:1.5px,color:#0369a1,rx:8px,ry:8px;
-    classDef phase2 fill:#fefce8,stroke:#ca8a04,stroke-width:1.5px,color:#854d0e,rx:8px,ry:8px;
-    classDef phase3 fill:#f0fdf4,stroke:#16a34a,stroke-width:1.5px,color:#166534,rx:8px,ry:8px;
-    classDef branchDef fill:#ffffff,stroke:#64748b,stroke-width:1.5px,stroke-dasharray: 3 3,color:#334155,rx:6px,ry:6px;
-    classDef decisionDef fill:#fff7ed,stroke:#ea580c,stroke-width:2px,color:#9a3412;
-    classDef finalDef fill:#eff6ff,stroke:#2563eb,stroke-width:2.5px,color:#1d4ed8,rx:10px,ry:10px;
-
-    class A,B phase1;
-    class C,D phase2;
-    class E,F phase3;
-    class G finalDef;
-```
-
-</details>
+### 4.1. Quy trình Thực thi Chuẩn (Pre-check Dastan ➔ Draft ➔ Jira/Artifact ➔ Execution)
 
 #### 📊 Bảng tổng hợp chi tiết từng bước thực thi:
 
 | Giai đoạn | Bước | Thao tác chính | Công cụ / Lệnh | Yêu cầu chất lượng & Lưu ý cốt lõi |
 | :---: | :---: | :--- | :--- | :--- |
+| **Tiên quyết** | **0** | **Pre-check với Dastan** | Slack (`@dastan`) | **Bắt buộc hỏi Dastan** xem đã tạo draft chưa để tránh bị duplicate ticket / test cases. |
 | **Giai đoạn 1** | **1** | **Khởi tạo Draft** | Claude + `/create-draft-test-execution` | Dán link tài liệu yêu cầu (Jira/Confluence/PR); AI tự phân tích và sinh kịch bản. |
 | *(Khởi tạo)* | **2** | **Self-Review** | Visual Studio Code | Mở file `.md` vừa sinh, đọc kỹ từng test step, đối chiếu logic nghiệp vụ. |
 | **Giai đoạn 2** | **3** | **Chuẩn hóa Jira** | Description & Table Jira | **Bắt buộc ghi rõ Endpoint** (`URL`, `Method`, `Payload`) để Dev hiểu rõ API call. |
 | *(Tạo Artifact)* | **4** | **Tạo Test Artifact** | `/create-test-artifact` | **Tạo ngay khi tạo ticket Jira xong** để đồng bộ tài liệu sang Confluence. |
-| **Giai đoạn 3** | **5** | **Gửi Dev Review** | Kênh Slack (`@dev_name`) | Gửi link Jira/Confluence để Dev review và chốt phạm vi kiểm thử (Test Scope). |
-| *(Thực thi)* | **6** | **Thực thi Staging** | `/Create-TR-Run-From-TR-Draft` | Khi Dev deploy Staging ➔ Chuyển `Testing`, tạo Test Run trên TestRail và chạy test. |
+| **Giai đoạn 3** | **5** | **Thực thi Staging & Nghiệm thu Ticket** | Môi trường Staging + Jira (`Pass Test`) | Khi Dev deploy Staging ➔ Chuyển `Testing` và thực thi test. **Khi test Pass 100%**, chuyển Jira sang **`Pass Test`** ✅, hoàn tất nghiệm thu (Sign-off) và tag reviewer. |
+| *(Review)* | **6** | **Gửi Dev Review** | Kênh Slack (`@dev_name`) | **Nghiệm thu (Sign-off) & Hoàn tất Ticket xong mới làm bước 6:** Gửi kết quả đã Pass Test cho Dev review xác nhận. |
+| *(TestRail)* | **7** | **Tạo TestRail Test Run** | `/Create-testrail-cases-from-confluence` & `/Create-TR-Run-From-TR-Draft` | **Sau khi Dev review OK xong, lúc này mới bắt đầu làm bước 7 (TestRail):** Chạy `/Create-testrail-cases-from-confluence` sinh file markdown (`.md`) draft test cases, rồi chạy `/Create-TR-Run-From-TR-Draft` import test cases và tạo Test Run chính thức. |
+
+0. **Pre-check với Dastan (Bắt buộc - Chống Duplicate):**
+   - Trước khi làm bất kỳ ticket nào, nhắn tin hỏi Dastan trên Slack xem đã có draft chưa.
+   - Nếu Dastan đã tạo -> Sử dụng bản draft của Dastan, không tạo mới tránh trùng lặp.
+   - Nếu Dastan xác nhận chưa tạo -> Bắt đầu làm bước 1.
 
 1. **Khởi tạo Draft Test Case qua AI (Claude):**
    - Lấy link tài liệu yêu cầu nghiệp vụ (**Requirement / Confluence spec / Jira ticket**).
@@ -240,28 +241,39 @@ flowchart TD
 2. **Kiểm tra & Rà soát trên VS Code:**
    - Mở file markdown vừa sinh trong **Visual Studio Code (VS Code)**.
    - Đọc kỹ, kiểm tra tính logic và đối chiếu với spec.
-3. **Chuẩn hóa bảng mô tả để dán vào Jira:**
-   - Sử dụng prompt chuẩn để AI đối chiếu với format ticket QA mẫu:
-     ```text
-     Please check with the existing ticket QA I sent you before and create the table and description that matches its format please.
-     ```
+3. **Chuẩn hóa bảng mô tả, liên kết Ticket & Epic trên Jira (Chuyển sang `Designing`):**
+   - Sử dụng prompt chuẩn để AI đối chiếu với format ticket QA mẫu và sinh bảng kịch bản chuẩn.
+   - **Chuyển trạng thái ticket Jira:** Cập nhật trạng thái ticket Jira sang **`Designing`**.
    - > [!IMPORTANT]
      > **Lưu ý bắt buộc về Endpoint:** Khi mô tả API call, **bắt buộc phải ghi rõ Endpoint** (`URL`, `Method`, `Payload`) — cần xác định chính xác đang gọi vào endpoint nào và cơ chế thực thi ra sao.
-4. **Tạo Test Artifact đồng bộ sang Confluence (`/create-test-artifact`):**
+     > 
+     > **Quy tắc Linked Work Items:** Trong mục **Linked Work Items** / **Linked Issues**, chọn quan hệ/trạng thái là **`tests`** và liên kết trực tiếp tới **Request Ticket** tương ứng (ví dụ: `QA-xxxx` tests `GTO-xxxx`). Ngoài ra, liên kết ticket vào Epic cha **`QA-3614: Transfer Tools Enhancement and feedback`**.
+4. **Tạo Test Artifact đồng bộ sang Confluence (`/create-test-artifact`) & Đổi Trạng Thái Jira (`Testing` 🚀):**
    - **Thực hiện ngay khi tạo ticket Jira xong:** Sau khi cập nhật Description và Table lên Jira, chạy ngay lệnh:
      ```bash
      /create-test-artifact
      ```
    - Lệnh này tự động đồng bộ tài liệu đặc tả kiểm thử sang trang Confluence liên quan.
-5. **Gửi Dev Review Test Section trên Slack:**
-   - Sau khi đã có ticket Jira và Test Artifact Confluence, gửi tin nhắn trao đổi trên Slack cho Dev phụ trách tính năng để chốt phạm vi kiểm thử:
-     > 💬 *"Hi @<dev_name>, I have added the test section here: `<link_ticket_jira>`. Please help reviewing. Thank you!"*
-6. **Bật Testing & Thực thi khi Dev deploy Staging:**
-   - Khi Dev hoàn tất build và xác nhận deploy bản test lên Staging ➔ Chuyển trạng thái ticket Jira sang **`Testing`** 🚀.
-   - Khởi tạo Test Run trên TestRail bằng lệnh **`/Create-TR-Run-From-TR-Draft`** và tiến hành thực thi kiểm thử (**Execute Tests**).
-7. **Nghiệm thu (Pass Test) & Gán Reviewer:**
-   - Khi toàn bộ test case đạt **100% Passed** ➔ Chuyển trạng thái ticket Jira sang **`Pass Test`** ✅.
-   - Gán các reviewer chính (**Mohit**, **Dastan**, **Sandeep**) để nghiệm thu và đóng ticket.
+   - **Chuyển trạng thái ticket Jira:** Chuyển trạng thái ticket Jira sang **`Testing`** 🚀 để chuẩn bị thực thi kiểm thử.
+5. **Thực thi Kiểm thử trên Staging & Nghiệm thu (Sign-off) Hoàn tất Ticket Jira (`Pass Test` ✅):**
+   - Khi ticket đã ở trạng thái **`Testing`** 🚀 và Dev hoàn tất build/deploy bản test lên Staging:
+   - Tiến hành thực thi kiểm thử trực tiếp trên Staging theo kịch bản đã chuẩn bị (Functional, UI, API, Regression).
+   - **Nghiệm thu (Sign-off) & Hoàn tất Ticket Jira:** Sau khi kiểm thử thực tế đạt kết quả Pass 100% ➔ Chuyển trạng thái ticket Jira sang **`Pass Test`** ✅ để hoàn tất nghiệm thu ticket và tag các reviewer (**Dastan**, **Mohit**, **Sandeep**).
+6. **Gửi Dev Review & Thông báo UAT Testing (@tiffany.kao, @jento.chan) qua Slack:**
+   - **Nghiệm thu (Sign-off) & Hoàn tất Ticket Jira (`Pass Test` ✅) trên môi trường QA xong mới làm bước 6:**
+   - **Gửi Dev Review:** Gửi tin nhắn trên Slack cho Dev phụ trách tính năng thông báo ticket đã Pass Test và gửi link Jira/Confluence để Dev review:
+     > 💬 *"Hi @<dev_name>, ticket `<ticket>` has been tested and passed (Pass Test ✅). Here is the test section: `<link_jira>`. Please help reviewing. Thank you!"*
+   - **Thông báo UAT Testing cho Ops:** Khi đã hoàn tất testing QA và tính năng đã setup sẵn trên UAT, gửi tin nhắn Slack cho Ops (**@tiffany.kao** và **@jento.chan**) để nhờ test trên UAT theo mẫu:
+     > 💬 *"hi @tiffany.kao , @jento.chan we have completed testing for `<TICKET_KEY_AND_TITLE>` on QA environment. And we already set it up on UAT environment, please help testing it on UAT. Thank you! 🙏*  
+     > *UAT UI deployed at: `web-reports.uat-gp.galaxydigital.io/fund_transfer_tool`"*  
+     *(Đính kèm preview card Jira Cloud của ticket, ví dụ: Task `GTO-16167`)*
+   - Chờ Dev xác nhận review OK và Ops (@tiffany.kao, @jento.chan) test UAT.
+7. **Tạo Test Case & Test Run trên TestRail (`/Create-testrail-cases-from-confluence` & `/Create-TR-Run-From-TR-Draft`):**
+   - **Sau khi Dev đã review và đồng thuận OK, lúc này mới bắt đầu làm bước 7 (TestRail):**
+   - Cấu hình TestRail Suite (API `945`, UI `946`, E2E `947` - Project ID `30`).
+   - **Thao tác 2 công đoạn chuẩn:**
+     1. Chạy lệnh **`/Create-testrail-cases-from-confluence`** để AI tự động phân tích Confluence spec & Jira ticket sinh ra file markdown (`.md`) chứa draft test cases chuẩn format TestRail.
+     2. Sau khi đã có file markdown draft từ bước trên, chạy tiếp lệnh **`/Create-TR-Run-From-TR-Draft`** để import test cases vào TestRail theo đúng Suite, tạo Test Run chính thức và đính kèm evidence kết quả kiểm thử (All Passed ✅).
 
 
 ---

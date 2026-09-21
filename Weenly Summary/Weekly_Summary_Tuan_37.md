@@ -10,6 +10,20 @@ Meeting sẽ chia ra làm các phần chính như sau:
 
 * List ra trong tuần rồi đã / đang làm ticket nào, progress như thế nào rồi:
 
+### 📊 Bảng tổng hợp các Ticket trong tuần (Ticket Summary)
+
+| STT | Ticket ID | Nội dung công việc | Phân loại | Thời gian | Trạng thái (Jira) | Ghi chú / Kết quả |
+| :---: | :--- | :--- | :--- | :---: | :---: | :--- |
+| 1 | `QA-6700` | Coordinator Service Endpoints Automation | Endpoint Automation | 11/09/2026 | **`Under Review`** ⏳ | Endpoint 1 (`/by-step-ref`) xong PR; Endpoint 2 dời tuần sau |
+| 2 | `QA-6703` | Automation Tests cho Permission Endpoints | Endpoint Automation | 08/09 - 11/09/2026 | **`In Progress`** 🔄 | `pending` đã tạo PR (`Under Review`); `rule-config` đang hoàn thiện |
+| 3 | `QA-6880`<br><sub>(GTO-16245,<br>GTO-16246)</sub> | Restrict retry of a failed transfer to ops users only | Test Execution | 10/09/2026 | **`Designing`** 📝 | Hoàn thành Test Scenario Matrix, chờ Dev deploy Staging |
+| 4 | `GTO-16168` | Split Fireblocks section into Vault and Whitelisted Address | UI & Feature Testing | 07/09/2026 | **`Pass Test`** ✅ | Hoàn tất kiểm thử UI, nghiệm thu Pass Test |
+| 5 | `DevOps` | Quy trình Quản lý Secret Jenkins & DevOps Workflow | Process / DevOps | 10/09/2026 | **`Done`** ✅ | Chuẩn hóa quy trình Terraform & Jenkins Secret |
+
+---
+
+### Chi tiết tiến độ từng ticket:
+
 ### 🎯 `QA-6700` - Coordinator Service Endpoints Automation (11/09/2026)
 
 * **Endpoint 1: `GET /instruction/by-step-ref/{uniqueRef}` (11/09/2026):**
@@ -128,7 +142,7 @@ Meeting sẽ chia ra làm các phần chính như sau:
        * Ma trận kiểm thử UI và vùng hồi quy (Regression matrix).
        * Tự động tạo Slash Command `/create-draft-test-execution` để cả team tái sử dụng.
     3. **QA Đánh giá & Rà soát:** QA rà soát lại các case biên (edge cases), bổ sung các điều kiện kiểm tra an toàn tiền tệ (money safety) và tinh chỉnh kỳ vọng.
-    4. **Kết quả cuối cùng:** Đồng bộ trực tiếp lên Confluence dưới Epic cha `QA-3614: Transfer Tools Enhancement` với nhãn `Test Artifact:`, sẵn sàng để Dev review trước khi deploy.
+    4. **Kết quả cuối cùng:** Đồng bộ trực tiếp lên Confluence dưới Epic cha `QA-3614: Transfer Tools Enhancement and feedback` với nhãn `Test Artifact:`, sẵn sàng để Dev review trước khi deploy.
 
 * Cách test regression tests và scope cần test trong regression tests:
 

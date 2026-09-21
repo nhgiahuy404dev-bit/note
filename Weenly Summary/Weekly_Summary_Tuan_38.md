@@ -10,10 +10,24 @@ Meeting sẽ chia ra làm các phần chính như sau:
 
 * List ra trong tuần rồi đã / đang làm ticket nào, progress như thế nào rồi:
 
+### 📊 Bảng tổng hợp các Ticket trong tuần (Ticket Summary)
+
+| STT | Ticket ID | Nội dung công việc | Phân loại | Thời gian | Trạng thái (Jira) | Ghi chú / Kết quả |
+| :---: | :--- | :--- | :--- | :---: | :---: | :--- |
+| 1 | `QA-6916` | Enhance Slack Notification on Jenkins When Having Re-run | Code Enhancement | 14/09/2026 | **`Done`** ✅ | PR merged thành công sau review |
+| 2 | `QA-5920`<br><sub>(GTO-15111)</sub> | Automation BE: Pending & History API endpoints | Endpoint Automation | 15/09/2026 | **`Done`** ✅ | Test suite Pass 100%, TestRail đầy đủ, PR merged |
+| 3 | `QA-5915`<br><sub>(GTO-15105)</sub> | Automate BE: Poller Entity/Strategy Parsing | Endpoint Automation | 15/09 - 16/09/2026 | **`Done`** ✅ | Phủ toàn bộ parser sàn, PR merged |
+| 4 | `GTO-16224` | Enable Datadog APM on transfer-gateway services | Test Execution | 16/09/2026 | **`Pass Test`** ✅ | Nghiệm thu Staging đạt 100% Passed qua Datadog APM |
+| 5 | `QA-6885`<br><sub>(GTO-16167,<br>GTO-16282)</sub> | Alert on Transfer Tool when instruction are pending approval | UI & E2E Testing | 17/09 - 18/09/2026 | **`Pass Test`** ✅ | Hoàn tất 13 TCs + 1 RT trên Staging, Pass Test 100% |
+
+---
+
+### Chi tiết tiến độ từng ticket:
+
 ### 🎯 `QA-6916` - Enhance Slack Notification on Jenkins When Having Re-run (14/09/2026)
 
 * **Loại công việc:** Code Enhancement / Fix logic trên Jenkins.
-* **Trạng thái / Tiến độ:** Hoàn tất triển khai & kiểm thử CLI ➔ **`Under Review`** (Đã tạo PR trên GitHub & gán reviewer Dastan).
+* **Trạng thái / Tiến độ:** Hoàn tất triển khai, kiểm thử CLI, review và merge PR ➔ **`Done`** ✅.
 * **Ngày hoàn thành:** 14/09/2026 (Thứ Hai).
 * **Branch:** `QA-6916-enhance-slack-notification-rerun`
 * **Chi tiết thực hiện:**
@@ -26,12 +40,12 @@ Meeting sẽ chia ra làm các phần chính như sau:
   7. **Create PR Summary:** Soạn thảo bản tóm tắt nội dung thay đổi của PR.
   8. **Create Pull Request:** Tạo Pull Request trên GitHub vào repository tương ứng.
   9. **Update Review Status:** Cập nhật trạng thái ticket Jira sang **`Under Review`**.
-  10. **Request Review (Dastan):** Đưa cho **Dastan** review PR và theo dõi phản hồi.
+  10. **Request Review & Merge:** Đưa **Dastan** review PR, nhận approval và hoàn tất merge code vào nhánh chính; đóng ticket Jira sang **`Done`** ✅.
 
 ### 🎯 `QA-5920` (GTO-15111) - Automation BE: Pending & History API endpoints (15/09/2026)
 
 * **Loại công việc:** Endpoint Automation Testing (Workflow 1 - 15 bước chuẩn).
-* **Trạng thái / Tiến độ:** Hoàn tất bộ test suite tự động ➔ **`Under Review`** (Đã tạo PR trên GitHub & gán reviewer Dastan).
+* **Trạng thái / Tiến độ:** Hoàn tất bộ test suite tự động, review và merge PR ➔ **`Done`** ✅.
 * **Ngày hoàn thành:** 15/09/2026 (Thứ Ba).
 * **Branch:** `QA-5920-pending-history-endpoints`
 * **Chi tiết thực hiện (Theo quy trình chuẩn 15 bước Endpoint Automation):**
@@ -49,48 +63,55 @@ Meeting sẽ chia ra làm các phần chính như sau:
   12. **Create PR Summary:** Soạn thảo bản tóm tắt nội dung PR.
   13. **Create Pull Request:** Tạo PR trên GitHub vào nhánh `main`.
   14. **Update Review Status:** Cập nhật trạng thái ticket Jira sang **`Under Review`**.
-  15. **Request Review (Dastan):** Đưa cho **Dastan** review PR và theo dõi phản hồi.
+  15. **Request Review & Merge:** Đưa **Dastan** review PR, nhận approval và hoàn tất merge vào `main`; chuyển Jira sang **`Done`** ✅.
 
 ### 🎯 `QA-5915` (GTO-15105) - Automate BE: Poller Entity/Strategy Parsing (15/09 - 16/09/2026)
 
 * **Loại công việc:** Endpoint Automation Testing (Workflow 1 - 15 bước chuẩn).
-* **Trạng thái / Tiến độ:** Hoàn tất triển khai kiểm thử tự động ➔ **`Under Review`** (Đã tạo PR & chờ review).
+* **Trạng thái / Tiến độ:** Hoàn tất triển khai kiểm thử tự động, review và merge PR ➔ **`Done`** ✅.
 * **Thời gian thực hiện:** 15/09 - 16/09/2026.
 * **Branch:** `QA-5915-poller-entity-strategy-parsing`
-* **Chi tiết thực hiện:**
-  * Phân tích cơ chế hoạt động của **Poller Service** trong việc định kỳ truy vấn và đồng bộ trạng thái giao dịch từ các sàn đối tác.
-  * Triển khai bộ test automation cho **Strategy Parsing**: Xác thực hệ thống chọn đúng Polling Strategy tương ứng cho từng sàn giao dịch (Kraken, Coinbase, Bullish, Bitstamp).
-  * Triển khai test automation cho **Entity Parsing**: Bóc tách và chuẩn hóa payload response từ sàn sang entity nội bộ (`status`, `s_unique_ref`, execution fee, timestamps).
-  * Xử lý và bao phủ các kịch bản ngoại lệ (Adverse Responses):
-    * Case sàn Kraken trả HTTP 200 nhưng body chứa mảng `error` ➔ Verify parser bắt đúng lỗi và map trạng thái `FAILED`.
-    * Case timeout mạng và lỗi HTTP 4xx/5xx từ sàn đối tác.
-  * Rà soát model Pydantic của Poller response để đảm bảo dữ liệu luôn hợp lệ, chạy test suite pass 100%, dọn orphan functions qua `/review-code`, mở PR và chuyển Jira sang **`Under Review`**.
+* **Chi tiết thực hiện (Theo quy trình chuẩn 15 bước Endpoint Automation):**
+  1. **Create Test Scenario Prompt:** Tạo prompt yêu cầu AI phân tích test steps và tự động sinh Scenarios cho Poller Entity/Strategy Parsing (Kraken, Coinbase, Bullish, Bitstamp).
+  2. **Create New Branch:** Tạo branch độc lập `QA-5915-poller-entity-strategy-parsing` và chuyển status ticket sang `In Project`.
+  3. **Complete Scenario:** Rà soát và hoàn thiện các kịch bản kiểm thử: Strategy Parsing (chọn đúng Polling Strategy theo từng sàn), Entity Parsing (bóc tách và chuẩn hóa response payload sang entity nội bộ `status`, `s_unique_ref`, fee, timestamps), và Adverse Responses (Kraken trả HTTP 200 kèm error array, timeout mạng, lỗi HTTP 4xx/5xx).
+  4. **Review Code:** Tự review code triển khai test script và các câu lệnh assertions.
+  5. **Run Code:** Chạy test suite automation cục bộ (Pass 100%).
+  6. **Fix Code:** Khắc phục triệt để các lỗi phát sinh về assertion và kiểu dữ liệu trả về từ parser.
+  7. **Create TestRail:** Tạo và cập nhật đầy đủ test cases lên hệ thống TestRail.
+  8. **Run Review Code:** Chạy lại toàn bộ test suite sau khi tạo TestRail để đảm bảo không bị regression (Pass 100%).
+  9. **Check Orphan Functions:** Kiểm tra và dọn dẹp các orphan functions sau khi hoàn thành bằng lệnh `/review-code`.
+  10. **Kiểm tra model Pydantic:** Rà soát lại toàn bộ model Pydantic của Poller response đảm bảo khớp schema 100%, không crash do thiếu trường hoặc sai kiểu dữ liệu.
+  11. **Commit and Push Code:** Commit với message chuẩn convention và push code lên remote branch.
+  12. **Create PR Summary:** Soạn thảo bản tóm tắt nội dung thay đổi của PR.
+  13. **Create Pull Request:** Tạo PR trên GitHub vào nhánh `main`.
+  14. **Update Review Status:** Cập nhật trạng thái ticket Jira sang **`Under Review`**.
+  15. **Request Review & Merge:** Đưa **Dastan** review PR, nhận feedback approval và hoàn tất merge code vào nhánh chính; chuyển Jira sang **`Done`** ✅.
 
 ### 🎯 `GTO-16224` - Enable Datadog APM on transfer-gateway services (16/09/2026)
 
 * **Loại công việc:** Test Execution / Feature Enhancement (Workflow 2 - 5 giai đoạn).
-* **Trạng thái / Tiến độ:** Hoàn tất giai đoạn Designing & Test Artifact ➔ **`Testing`** (Chờ Dev deploy Staging để nghiệm thu).
+* **Trạng thái / Tiến độ:** Hoàn tất giai đoạn Designing, Test Artifact và thực thi nghiệm thu Staging ➔ **`Pass Test`** ✅.
 * **Ngày thực hiện:** 16/09/2026 (Thứ Tư).
-* **Chi tiết thực hiện:**
-  1. **Read Request:** Phân tích yêu cầu kích hoạt Datadog APM (Application Performance Monitoring) trên service `transfer-gateway` nhằm giám sát hiệu năng thời gian thực (Distributed Tracing, Metrics, Latency P95/P99).
-  2. **Designing:** Thiết kế bộ kịch bản kiểm thử toàn diện: Service Health Check sau khi inject `dd-trace`; Distributed Tracing & Context Propagation (`x-datadog-trace-id`, `traceparent`); Error & Exception Tracing (`error: 1`); Log-to-Trace Correlation (`dd.trace_id`, `dd.span_id`); Gateway Regression Test (overhead < 5ms).
-  3. **Testing & Test Artifact:**
-     * Chuẩn hóa Description và bảng kịch bản dán lên ticket Jira `GTO-16224`.
-     * Gửi Dev phụ trách review và chốt Test Section trên Slack.
-     * Chạy lệnh `/create-test-artifact` để đồng bộ tài liệu sang Confluence.
-  4. **Kế hoạch tiếp theo:** Khi Dev xác nhận deploy lên Staging ➔ Thực thi kiểm thử trực tiếp trên Datadog UI và nghiệm thu chuyển sang **`Pass Test`** ✅.
+* **Chi tiết thực hiện (Theo quy trình chuẩn 5 giai đoạn):**
+  1. **Read Request:** Phân tích yêu cầu kích hoạt Datadog APM (Application Performance Monitoring) trên service `transfer-gateway` nhằm giám sát hiệu năng thời gian thực (Distributed Tracing, Metrics, Latency P95/P99) ➔ Cập nhật Jira sang **`In Progress`**.
+  2. **Designing:** Chuyển status Jira sang **`Designing`** ➔ Thiết kế bộ kịch bản kiểm thử toàn diện: Service Health Check sau inject `dd-trace`; Distributed Tracing & Context Propagation (`x-datadog-trace-id`, `traceparent`); Error & Exception Tracing (`error: 1`); Log-to-Trace Correlation (`dd.trace_id`, `dd.span_id`); Gateway Regression Test (overhead < 5ms). Chuẩn hóa Description, chạy lệnh `/create-test-artifact` để đồng bộ Confluence và gửi Dev chốt Test Section trên Slack.
+  3. **Testing:** Chuyển status Jira sang **`Testing`** khi Dev deploy Staging ➔ Thực thi kiểm thử trực tiếp trên Datadog UI và hệ thống (xác nhận Flame Graph thông suốt, headers truyền đúng).
+  4. **Pass Test:** Kiểm thử đạt chuẩn 100% Passed (không đứt đoạn trace, overhead < 5ms) ➔ Chuyển Jira sang **`Pass Test`**, đánh dấu hoàn thành ✅.
+  5. **Create PR & Sign-off:** Xác nhận kết quả nghiệm thu với Dev và các reviewer chính (**Mohit**, **Dastan**, **Sandeep**).
 
 ### 🎯 `QA-6885` [GTO-16167] [GTO-16282] - Alert on Transfer Tool when instruction are pending approval (17/09 - 18/09/2026)
 
-* **Loại công việc:** Test Execution / UI & E2E Testing (Workflow 2 - 5 giai đoạn).
-* **Trạng thái / Tiến độ:** **`Testing`** (Đã hoàn tất thiết kế 13 Test Cases + 1 Regression Test, tạo Test Artifact và đang thực thi checklist kiểm thử trên Staging).
+* **Loại công việc:** Test Execution / UI & E2E Testing (Workflow 2 - Quy trình chuẩn có Pre-check).
+* **Trạng thái / Tiến độ:** Hoàn tất thực thi kiểm thử trên Staging (13 Test Cases + 1 Regression Test đạt 100% Passed) ➔ **`Pass Test`** ✅.
 * **Thời gian thực hiện:** 17/09 - 18/09/2026.
-* **Chi tiết thực hiện (Theo quy trình chuẩn 5 giai đoạn):**
-  1. **Read Request:** Đọc và phân tích kỹ tài liệu yêu cầu Jira (`QA-6885`, `GTO-16167`, `GTO-16282`), Confluence spec và trao đổi trên Slack về cơ chế Nav Badge cảnh báo lệnh pending approval ➔ Cập nhật Jira sang **`In Progress`**.
-  2. **Designing:** Chuyển status Jira sang **`Designing`** ➔ Thiết kế bộ kịch bản kiểm thử (Badge rendering, Cap `9+`, Polling gate 60s, Scoping & Optimistic UI).
-  3. **Testing:** Chuyển status Jira sang **`Testing`** khi Dev deploy staging ➔ Thực thi test cases; đồng bộ test artifacts lên Confluence và khởi tạo Test Run trên TestRail (`/Create-TR-Run-From-TR-Draft`).
-  4. **Pass Test:** Sau khi hoàn tất kiểm thử đạt chuẩn (100% Passed) ➔ Chuyển Jira sang **`Pass Test`**, đánh dấu hoàn thành ✅.
-  5. **Create PR:** Tạo PR trên Git (nếu có automation regression script) và gán các reviewer chính: **Mohit**, **Dastan**, và **Sandeep**.
+* **Chi tiết thực hiện (Theo quy trình chuẩn kèm Pre-check Dastan):**
+  0. **Pre-check with Dastan (Chống duplicate):** Trao đổi trực tiếp với Dastan trên Slack trước khi tạo draft ticket / test cases để đảm bảo không bị trùng lặp dữ liệu trên Jira & TestRail.
+  1. **Read Request & Create Draft:** Đọc và phân tích kỹ tài liệu yêu cầu Jira (`QA-6885`, `GTO-16167`, `GTO-16282`), Confluence spec; chạy lệnh `/create-draft-test-execution` để AI sinh kịch bản nháp ➔ Cập nhật Jira sang **`In Progress`**.
+  2. **Designing:** Chuyển status Jira sang **`Designing`** ➔ Rà soát kịch bản trên VS Code, chuẩn hóa Description (ghi rõ Endpoint `GET /ui/instruction/approvals/count`) và chạy `/create-test-artifact` đồng bộ Confluence.
+  3. **Testing on Staging & Sign-off Pass Test:** Chuyển status Jira sang **`Testing`** khi Dev deploy Staging ➔ Thực thi kiểm thử 13 TCs + 1 RT đạt 100% Passed ➔ Nghiệm thu (Sign-off) và chuyển Jira sang **`Pass Test`** ✅, tag reviewer (**Dastan**, **Mohit**, **Sandeep**).
+  4. **Dev Review:** Nghiệm thu hoàn tất ticket xong, nhắn tin Slack gửi link Jira để Dev review xác nhận.
+  5. **Create TestRail:** Sau khi Dev review OK xong, chạy `/Create-testrail-cases-from-confluence` sinh file markdown draft test cases, rồi chạy `/Create-TR-Run-From-TR-Draft` tạo Test Run TestRail (Suite UI 946 & Suite E2E 947) và lưu evidence.
 
 
 
@@ -104,8 +125,8 @@ Meeting sẽ chia ra làm các phần chính như sau:
   * **Demo 2: Trình diễn Bộ Test Automation Poller Entity/Strategy Parsing (`QA-5915`):**
     * Trình diễn bộ test automation chạy pass 100% kiểm tra bóc tách và chuẩn hóa dữ liệu từ các sàn đối tác (Kraken, Coinbase, Bullish, Bitstamp).
     * Trình diễn xử lý kịch bản ngoại lệ: Sàn Kraken trả HTTP 200 nhưng body chứa mảng error được parser bắt chính xác và map trạng thái `FAILED`.
-  * **Demo 3: Trình diễn Quy trình Test Execution Chuẩn 6 Bước kết hợp AI Slash Commands:**
-    * Trình diễn quy trình khép kín: Khởi tạo Draft qua Claude (`/create-draft-test-execution`) ➔ Review trên VS Code ➔ Chuẩn hóa Jira & Tạo Test Artifact (`/create-test-artifact`) ➔ Đưa Dev chốt Test Scope trên Slack ➔ Khởi tạo Test Run (`/Create-TR-Run-From-TR-Draft`) khi deploy Staging ➔ Nghiệm thu Pass Test.
+  * **Demo 3: Trình diễn Quy trình Test Execution Chuẩn kết hợp AI Slash Commands:**
+    * Trình diễn quy trình khép kín: Pre-check với Dastan chống duplicate ➔ Khởi tạo Draft qua Claude (`/create-draft-test-execution`) ➔ Review trên VS Code ➔ Chuẩn hóa Jira & Tạo Test Artifact (`/create-test-artifact`) ➔ Testing & Nghiệm thu Pass Test ➔ Gửi Dev Review ➔ Tạo Test Run TestRail (`/Create-TR-Run-From-TR-Draft`).
 
 ## Knowledge Sharing:
 
@@ -175,7 +196,7 @@ Cách test ticket enhancement của dev và regression scope mình cần làm t�
 
 Action items:
 
-* [ ] Hoàn tất thực thi checklist kiểm thử trên Staging cho ticket `QA-6885` (Suite UI 946 & Suite E2E 947), cập nhật TestRail Run và nghiệm thu chuyển trạng thái sang `Pass Test` ✅.
-* [ ] Theo dõi feedback review PR từ Dastan cho các ticket endpoint automation đã submit: `QA-6916` (Slack notification re-run), `QA-5920` (Pending & History endpoints), `QA-5915` (Poller parsing).
-* [ ] Phối hợp với Dev phụ trách ticket `GTO-16224` (Datadog APM) để xác nhận bản deploy trên Staging và thực thi kiểm tra Distributed Tracing trên Datadog UI.
+* [x] Hoàn tất thực thi checklist kiểm thử trên Staging cho ticket `QA-6885` (Suite UI 946 & Suite E2E 947), cập nhật TestRail Run và nghiệm thu chuyển trạng thái sang `Pass Test` ✅.
+* [x] Nhận feedback review PR từ Dastan cho các ticket endpoint automation đã submit: `QA-6916` (Slack notification re-run), `QA-5920` (Pending & History endpoints), `QA-5915` (Poller parsing) và hoàn tất merge PR (Done) ✅.
+* [x] Phối hợp với Dev phụ trách ticket `GTO-16224` (Datadog APM), xác nhận bản deploy trên Staging và thực thi kiểm tra Distributed Tracing trên Datadog UI đạt chuẩn `Pass Test` ✅.
 * [ ] Tiếp tục duy trì và mở rộng quy trình ứng dụng AI (`/create-draft-test-execution` ➔ `/create-test-artifact` ➔ `/Create-TR-Run-From-TR-Draft`) cho các ticket kiểm thử trong tuần tiếp theo.

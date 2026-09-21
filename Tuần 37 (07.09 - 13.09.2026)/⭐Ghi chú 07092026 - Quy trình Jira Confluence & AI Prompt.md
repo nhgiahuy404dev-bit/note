@@ -10,10 +10,15 @@
 
 ## 📝 Ghi chú công việc / Study
 
-### 📋 Quy trình chuẩn bị & Phân tích yêu cầu
+### 📋 Quy trình chuẩn bị & Phân tích yêu cầu (Kèm Pre-check Chống Duplicate)
+
+> [!CAUTION]
+> **Pre-check với Dastan:** Trước khi tạo draft ticket / test execution, bắt buộc hỏi Dastan trên Slack xem đã có draft chưa để tránh bị duplicate trên Jira & TestRail.
+
+- **Pre-check Dastan:** Trao đổi trực tiếp với Dastan trên Slack để xác nhận draft đã tồn tại hay chưa, chống trùng lặp dữ liệu.
 - **Thu thập tài liệu nguồn:** Link Jira ticket, Confluence spec, Git PR và Slack threads liên quan.
 - **Phân tích phạm vi:** Xác định rõ Scope thay đổi và thiết lập bộ kịch bản kiểm thử (API / UI / Regression).
-- **Thiết kế tài liệu:** Soạn thảo test execution draft và phối hợp với các bên liên quan.
+- **Thiết kế tài liệu:** Soạn thảo test execution draft qua `/create-draft-test-execution` và phối hợp với các bên liên quan.
 
 ---
 
@@ -65,7 +70,7 @@ Save it to the `test-executions` folder as a guide.
 | **1** | **Tạo Ticket Jira** | Tạo ticket mới trong danh sách Jira, chọn Status ban đầu là **`Designing`**. |
 | **2** | **Cập nhật nội dung** | Dán toàn bộ nội dung kịch bản test vừa được AI tạo vào phần mô tả của Ticket. |
 | **3** | **Gửi Dev Review** | Nhắn tin/trao đổi trực tiếp với Dev phụ trách để cùng review các Test Cases đã thiết kế. |
-| **4** | **Liên kết Epic / Ticket cha** | Nhớ chỉnh sửa ticket và liên kết vào: **`QA-3614: Transfer Tools Enhancement`**. |
+| **4** | **Liên kết Epic / Ticket cha** | Nhớ chỉnh sửa ticket và liên kết vào: **`QA-3614: Transfer Tools Enhancement and feedback`**. |
 | **5** | **Đồng bộ sang Confluence** | Đưa tài liệu sang Confluence. Trong Ticket Jira, dán liên kết trang Confluence với caption: **`Test Artifact:`**. |
 | **6** | **Chuyển dữ liệu bằng AI** | Chạy prompt AI để chuyển dữ liệu từ Jira sang Confluence với lệnh: *"Fill out the section above Test Execution section"* hoặc điều chỉnh thủ công theo template trang. |
 | **7** | **Xác nhận Deploy** | Chủ động hỏi Dev xác nhận xem code đã được deploy lên môi trường test chưa để bắt đầu thực thi. |
