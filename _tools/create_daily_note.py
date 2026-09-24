@@ -533,7 +533,7 @@ def format_weekly_summary_content(parsed_notes: List[Dict[str, Any]], week_num: 
             lines.append("        2. **Designing:** Chuyển status Jira sang `Designing`, rà soát trên VS Code, chuẩn hóa Jira Description (ghi rõ Endpoint API) và đồng bộ Confluence (`/create-test-artifact`).")
             lines.append("        3. **Testing on Staging:** Chuyển status Jira sang `Testing` khi Dev deploy Staging; thực thi kiểm thử toàn bộ test cases + regression test.")
             lines.append("        4. **Pass Test & Dev Review:** Khi test Pass 100%, gửi kết quả và Test Section cho Dev review trên Slack và nhận xác nhận OK.")
-            lines.append("        5. **Create TestRail & Sign-off:** Sau khi Dev review OK, lúc này mới bắt đầu làm TestRail (`/Create-TR-Run-From-TR-Draft`), chuyển status Jira sang `Pass Test` ✅ và tag các reviewer chính (**Dastan**, **Mohit**, **Sandeep**).")
+            lines.append("        5. **Create TestRail & Sign-off:** Sau khi Dev review OK, lúc này mới bắt đầu làm TestRail (nếu đã có test cases: chạy `/create-testrail-test-run-from-confluence` chỉ run kết quả; nếu chưa có: chạy `/Create-testrail-cases-from-confluence` & `/Create-TR-Run-From-TR-Draft`), chuyển status Jira sang `Pass Test` ✅ và tag các reviewer chính (**Dastan**, **Mohit**, **Sandeep**).")
             demo_items.append(f"Trình diễn Feature/UI Test Execution & Quy trình nghiệm thu (`{t['key']}`)")
             
         lines.append(f"    * **Tiến độ hiện tại:** {t['progress']}")

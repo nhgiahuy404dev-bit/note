@@ -12,3 +12,31 @@ Quy tắc Linked Work Items trên Jira (Bước 3 - Chuyển sang Designing):
 Mẫu tin nhắn Slack nhờ Ops (@tiffany.kao, @jento.chan) UAT Testing (khi Pass Test QA):
 hi @tiffany.kao , @jento.chan we have completed testing for <TICKET_LINK> on QA environment. And we already set it up on UAT environment, please help testing it on UAT. Thank you! 🙏
 UAT UI deployed at: web-reports.uat-gp.galaxydigital.io/fund_transfer_tool
+
+Mẫu Email UAT Sign-off gửi cho Tiffany Kao / Ops (khi Tiffany rảnh chuẩn bị test):
+- To: tiffany.kao@galaxydigital.io, jento.chan@galaxydigital.io
+- Subject: [UAT Sign-off Request] <RELEASE_VERSION> - <MODULE_NAME> (<TICKET_ID>)
+- Body:
+Hi Tiffany & Ops team,
+QA has completed testing for <TICKET_ID> (<TICKET_TITLE>) on QA environment with 100% Passed.
+The feature is deployed and ready for your UAT testing:
+- UAT URL: web-reports.uat-gp.galaxydigital.io/fund_transfer_tool
+- Jira Ticket: <TICKET_LINK>
+- Key Scope: <SUMMARY_TEST_SCOPE>
+Please help test and provide your UAT Sign-off via this email thread once completed. Thank you! 🙏
+
+Vị trí lấy thông tin tài khoản Okta (AWS Secrets Manager & File .env):
+vào trong galaxydeveloper
+- Repo / Thư mục: Study_GALAXY/api-qa-resolve-pr2/
+- File cấu hình: .env.qa hoặc .env.uat (tìm dòng OPS_SECRET_SUFFIX3 hoặc OPS_SECRET_URL3)
+- Đường dẫn trên AWS Secrets Manager:
+  + qa/secret_server_cloud/test_okta_qa_user3 (hoặc uat/...)
+  + qa/secret_server_cloud/test_okta_qa_user1
+  + qa/secret_server_cloud/test_okta_qa_user2
+- Các tài khoản test chính:
+  + Okta_QA_User1@galaxydigital.io (Maker / Initiator)
+  + Okta_QA_User2@galaxydigital.io (Approver / Checker)
+  + test_okta_qa_user3 (Approver / Maker)
+
+Flow Git đồng bộ / lấy code mới nhất về sửa:
+git switch main -> git pull -> git fetch origin -> git switch main -> git pull origin main -> git switch <endpoint> -> git pull -> git pull origin main

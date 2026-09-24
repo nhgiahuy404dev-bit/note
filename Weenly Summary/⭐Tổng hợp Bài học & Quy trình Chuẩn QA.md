@@ -104,18 +104,25 @@ Designing (Thiết kế test cases)
 Luôn kéo code mới nhất từ nhánh `main` trước khi rẽ nhánh:
 
 ```bash
-# 1. Fetch thông tin mới nhất từ remote
-git fetch origin
+# Chuỗi lệnh chuẩn để lấy code mới nhất từ main về nhánh endpoint để sửa:
+# git switch main -> git pull -> git fetch origin -> git switch main -> git pull origin main -> git switch <endpoint> -> git pull -> git pull origin main
 
-# 2. Chuyển sang nhánh main và cập nhật
+# 1. Chuyển về nhánh main và kéo code cục bộ
+git switch main
+git pull
+
+# 2. Fetch toàn bộ nhánh remote và cập nhật main từ origin
+git fetch origin
 git switch main
 git pull origin main
 
-# 3. Tạo và chuyển sang nhánh mới tương ứng với endpoint/ticket
-git checkout -b <branch-name>-<endpoint>
-# hoặc: git switch -c <branch-name>-<endpoint>
+# 3. Chuyển sang nhánh endpoint cần sửa/làm việc và đồng bộ code mới nhất từ origin/main
+git switch <endpoint>
+git pull
+git pull origin main
 
-# 4. Đẩy nhánh mới lên remote lần đầu
+# 4. (Nếu tạo nhánh mới hoàn toàn từ main):
+git checkout -b <branch-name>-<endpoint>
 git push -u origin <branch-name>-<endpoint>
 ```
 
@@ -225,7 +232,7 @@ Trước khi tạo Pull Request, bắt buộc tự rà soát mã nguồn:
 | *(Tạo Artifact)* | **4** | **Tạo Test Artifact** | `/create-test-artifact` | **Tạo ngay khi tạo ticket Jira xong** để đồng bộ tài liệu sang Confluence. |
 | **Giai đoạn 3** | **5** | **Thực thi Staging & Nghiệm thu Ticket** | Môi trường Staging + Jira (`Pass Test`) | Khi Dev deploy Staging ➔ Chuyển `Testing` và thực thi test. **Khi test Pass 100%**, chuyển Jira sang **`Pass Test`** ✅, hoàn tất nghiệm thu (Sign-off) và tag reviewer. |
 | *(Review)* | **6** | **Gửi Dev Review** | Kênh Slack (`@dev_name`) | **Nghiệm thu (Sign-off) & Hoàn tất Ticket xong mới làm bước 6:** Gửi kết quả đã Pass Test cho Dev review xác nhận. |
-| *(TestRail)* | **7** | **Tạo TestRail Test Run** | `/Create-testrail-cases-from-confluence` & `/Create-TR-Run-From-TR-Draft` | **Sau khi Dev review OK xong, lúc này mới bắt đầu làm bước 7 (TestRail):** Chạy `/Create-testrail-cases-from-confluence` sinh file markdown (`.md`) draft test cases, rồi chạy `/Create-TR-Run-From-TR-Draft` import test cases và tạo Test Run chính thức. |
+| *(TestRail)* | **7** | **Tạo TestRail Test Run** | `/create-testrail-test-run-from-confluence` *(đã có cases)*<br>hoặc `/Create-testrail-cases-from-confluence` & `/Create-TR-Run-From-TR-Draft` *(chưa có cases)* | **Sau khi Dev review OK xong, lúc này mới bắt đầu làm bước 7 (TestRail):**<br>- Nếu đã có cases: chạy `/create-testrail-test-run-from-confluence` chỉ run kết quả.<br>- Nếu chưa có cases: chạy 2 công đoạn tạo cases & run. |
 
 0. **Pre-check với Dastan (Bắt buộc - Chống Duplicate):**
    - Trước khi làm bất kỳ ticket nào, nhắn tin hỏi Dastan trên Slack xem đã có draft chưa.
@@ -267,13 +274,21 @@ Trước khi tạo Pull Request, bắt buộc tự rà soát mã nguồn:
      > 💬 *"hi @tiffany.kao , @jento.chan we have completed testing for `<TICKET_KEY_AND_TITLE>` on QA environment. And we already set it up on UAT environment, please help testing it on UAT. Thank you! 🙏*  
      > *UAT UI deployed at: `web-reports.uat-gp.galaxydigital.io/fund_transfer_tool`"*  
      *(Đính kèm preview card Jira Cloud của ticket, ví dụ: Task `GTO-16167`)*
+   - **Soạn UAT Sign-off via Email cho Tiffany Kao (Ops):** Khi Tiffany Kao rảnh và chuẩn bị test trên UAT, QA chủ động soạn email UAT Sign-off gửi cho Tiffany Kao / Ops team bàn giao đầy đủ: UAT link, Ticket/Release info, phạm vi test đã pass trên QA để Ops tiến hành testing và phản hồi UAT Sign-off qua email thread.
    - Chờ Dev xác nhận review OK và Ops (@tiffany.kao, @jento.chan) test UAT.
-7. **Tạo Test Case & Test Run trên TestRail (`/Create-testrail-cases-from-confluence` & `/Create-TR-Run-From-TR-Draft`):**
+7. **Tạo Test Case & Test Run trên TestRail:**
    - **Sau khi Dev đã review và đồng thuận OK, lúc này mới bắt đầu làm bước 7 (TestRail):**
    - Cấu hình TestRail Suite (API `945`, UI `946`, E2E `947` - Project ID `30`).
-   - **Thao tác 2 công đoạn chuẩn:**
-     1. Chạy lệnh **`/Create-testrail-cases-from-confluence`** để AI tự động phân tích Confluence spec & Jira ticket sinh ra file markdown (`.md`) chứa draft test cases chuẩn format TestRail.
-     2. Sau khi đã có file markdown draft từ bước trên, chạy tiếp lệnh **`/Create-TR-Run-From-TR-Draft`** để import test cases vào TestRail theo đúng Suite, tạo Test Run chính thức và đính kèm evidence kết quả kiểm thử (All Passed ✅).
+   - **Phân tách 2 trường hợp:**
+     - **Trường hợp 1 (ĐÃ CÓ sẵn Test Cases trên TestRail):**
+       Không cần tạo mới test cases, chỉ cần chạy lệnh tạo Test Run và ghi nhận kết quả kiểm thử (All Passed ✅):
+       ```bash
+       /create-testrail-test-run-from-confluence
+       ```
+     - **Trường hợp 2 (CHƯA CÓ Test Cases trên TestRail - Cần tạo mới):**
+       Thao tác 2 công đoạn chuẩn:
+       1. Chạy lệnh **`/Create-testrail-cases-from-confluence`** để AI tự động phân tích Confluence spec & Jira ticket sinh ra file markdown (`.md`) chứa draft test cases chuẩn format TestRail.
+       2. Sau khi đã có file markdown draft từ bước trên, chạy tiếp lệnh **`/Create-TR-Run-From-TR-Draft`** để import test cases vào TestRail theo đúng Suite, tạo Test Run chính thức và đính kèm evidence kết quả kiểm thử (All Passed ✅).
 
 
 ---

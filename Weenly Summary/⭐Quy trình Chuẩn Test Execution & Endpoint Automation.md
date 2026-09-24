@@ -130,27 +130,38 @@ Tài liệu này tổng hợp toàn diện, chi tiết và chuẩn hóa 100% hai
 > ```
 > *(Đính kèm thẻ preview Jira Cloud của ticket tương ứng, ví dụ: Task `GTO-16167`)*
 
+   3. **Soạn UAT Sign-off via Email cho Ops (khi @tiffany.kao rảnh & chuẩn bị test):**  
+      Khi Tiffany Kao phản hồi sẵn sàng kiểm thử trên UAT, QA chủ động soạn email UAT Sign-off gửi cho Tiffany Kao / Ops team để bàn giao chi tiết: URL UAT, Release/Ticket, phạm vi test đã Pass trên QA, hỗ trợ Ops test thuận tiện và phản hồi UAT Sign-off qua email thread.
+
 * **Mục đích:** Dev xác nhận review OK kết quả test thực tế và Ops (@tiffany.kao, @jento.chan) tiến hành kiểm thử nghiệm thu trên môi trường UAT.
 
 ---
 
-### 🔹 Bước 7: Tạo Test Case & Test Run trên TestRail (`/Create-testrail-cases-from-confluence` & `/Create-TR-Run-From-TR-Draft`)
+### 🔹 Bước 7: Tạo Test Case & Test Run trên TestRail
 * **Thời điểm:** ⚠️ **Sau khi Dev đã review OK xong xuôi, lúc này mới bắt đầu làm bước 7 (TestRail).**
 * **Cấu hình TestRail:** Project ID `30`, chọn đúng Suite ID:
   * `Suite ID API`: **945**
   * `Suite ID UI`: **946**
   * `Suite ID E2E`: **947**
-* **Thao tác 2 công đoạn bắt buộc (Theo đúng trình tự):**
-  1. **Công đoạn 1 - Sinh Markdown Draft Test Cases:** Chạy lệnh:
-     ```bash
-     /Create-testrail-cases-from-confluence
-     ```
-     AI đọc tài liệu Confluence spec & Jira ticket để sinh file markdown (`.md`) chứa draft test cases chuẩn format TestRail.
-  2. **Công đoạn 2 - Tạo Test Run & Import Cases Chính Thức:** Sau khi đã có file draft `.md`, chạy tiếp lệnh:
-     ```bash
-     /Create-TR-Run-From-TR-Draft
-     ```
-     Lệnh này tự động import toàn bộ test cases vào TestRail theo đúng Suite ID tương ứng, khởi tạo Test Run chính thức và đính kèm evidence kết quả kiểm thử (All Passed ✅).
+* **Phân tách 2 trường hợp thực hiện:**
+  * **Trường hợp 1 (ĐÃ CÓ sẵn Test Cases trên TestRail):**
+    * Không cần tạo mới test cases.
+    * Chạy lệnh tạo Test Run trực tiếp từ Confluence và ghi nhận kết quả kiểm thử (All Passed ✅):
+      ```bash
+      /create-testrail-test-run-from-confluence
+      ```
+  * **Trường hợp 2 (CHƯA CÓ Test Cases trên TestRail - Cần tạo mới):**
+    * Thao tác 2 công đoạn chuẩn:
+      1. **Công đoạn 1 - Sinh Markdown Draft Test Cases:** Chạy lệnh:
+         ```bash
+         /Create-testrail-cases-from-confluence
+         ```
+         AI đọc tài liệu Confluence spec & Jira ticket để sinh file markdown (`.md`) chứa draft test cases chuẩn format TestRail.
+      2. **Công đoạn 2 - Tạo Test Run & Import Cases Chính Thức:** Sau khi đã có file draft `.md`, chạy tiếp lệnh:
+         ```bash
+         /Create-TR-Run-From-TR-Draft
+         ```
+         Lệnh này tự động import toàn bộ test cases vào TestRail theo đúng Suite ID tương ứng, khởi tạo Test Run chính thức và đính kèm evidence kết quả kiểm thử (All Passed ✅).
 
 ---
 
@@ -171,11 +182,14 @@ Tài liệu này tổng hợp toàn diện, chi tiết và chuẩn hóa 100% hai
 
 ---
 
-### 🔹 Bước 2: Khởi Tạo Nhánh Mới Độc Lập Từ Nhánh Main (Create New Branch)
-* **Thời điểm:** Sau khi đã có bộ Scenarios ban đầu từ AI.
-* **Mục đích:** Đảm bảo mã nguồn được cách ly hoàn toàn, độc lập phát triển và tránh xung đột code.
+### 🔹 Bước 2: Khởi Tạo / Đồng Bộ Nhánh Endpoint Từ Main (Create New Branch & Sync Code)
+* **Thời điểm:** Sau khi đã có bộ Scenarios ban đầu từ AI hoặc khi cần đồng bộ code mới nhất về nhánh endpoint để sửa.
+* **Mục đích:** Đảm bảo mã nguồn được cách ly hoàn toàn, độc lập phát triển và luôn chứa các commit mới nhất từ `main`.
 * **Thao tác:**
-  * Kéo mã nguồn mới nhất từ nhánh `main`.
+  * **Chuỗi lệnh Git chuẩn để lấy code về sửa:**
+    ```bash
+    git switch main -> git pull -> git fetch origin -> git switch main -> git pull origin main -> git switch <endpoint> -> git pull -> git pull origin main
+    ```
   * Tạo branch mới độc lập theo quy tắc định danh: `<branch-name>-<endpoint>` (ví dụ: `QA-6700-instruction-by-step-ref`).
   * Cập nhật trạng thái ticket trên Jira sang **`In Project`**.
 * **Quy tắc bất biến:** **1 branch chỉ phục vụ duy nhất 1 endpoint**, tuyệt đối không gộp chung nhiều endpoint vào một branch.
